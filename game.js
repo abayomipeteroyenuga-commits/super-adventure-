@@ -24,6 +24,11 @@ let finishCelebration=0, finishNextWorld=false, finishEmote='🥳', gameState='m
 let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
 const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=40;
+// Relaxed exploration worlds: no guardian battle, just collect treasure and reach the exit.
+const FREE_ROAM_WORLDS=new Set([20,21,23,25,28,29,31,35,36,38]);
+const SWIM_WORLDS=new Set([21,25,28]);
+const isFreeRoam=()=>FREE_ROAM_WORLDS.has(world);
+const isSwimming=()=>SWIM_WORLDS.has(world);
 const SAVE_KEY='ethan.superkingdom.save.v1';
 const BADGES=[{id:'feather',name:'FEATHER GLIDE',desc:'Hold jump while falling to glide'},{id:'magnet',name:'COIN MAGNET',desc:'Attract nearby coins automatically'},{id:'stomp',name:'POWER STOMP',desc:'Stronger enemy bounces and bonus points'}];
 let badgeIndex=0,wonderTime=0,wonderPulse=0,secretReveal=0,wonderSeeds=0,companionMood=0;
@@ -183,25 +188,25 @@ const worldMissions=[
  'Magic fills the castle halls. Use your powers wisely and defeat the enchanted guardian standing between you and the Dark Kingdom.',
  'Fedora is very close now. Survive the Dark Kingdom, defeat its ruler, and open the road to the final fortress.',
  'This is it! Fedora is inside the Ultimate Kingdom. Defeat the final boss, break the prison, and bring Fedora home!',
- 'Ride the aurora winds along the coast and defeat the Tidewatch Guardian.',
- 'Swim through glowing coral passages and challenge the Reef Queen.',
- 'Outsmart clockwork traps and stop the brass sentinel.',
+ 'FREE EXPLORATION: Wander the aurora coast, collect coins and discover secret caches before heading through the exit. No guardian battle.',
+ 'FREE EXPLORATION: Swim through glowing coral passages, gather coins and treasure, then find the glowing exit gate. No guardian battle.',
+ 'FREE EXPLORATION: Explore the clockwork city, collect its scattered coins and find the exit. No guardian battle.',
  'Bounce across candy bridges and defeat the Sugarstorm Sorcerer.',
- 'Navigate the bamboo maze and face the Grove Guardian.',
- 'Cross sapphire waves and defeat the Ocean Titan.',
+ 'FREE EXPLORATION: Explore the bamboo sanctuary, gather coins and hidden treasure, then continue through the exit. No guardian battle.',
+ 'FREE EXPLORATION: Swim through sapphire waters, collect floating coins and hidden treasure, then reach the exit gate. No guardian battle.',
  'Find the hidden jungle route and defeat the Emerald Beast.',
  'Follow the starlit dunes and defeat the Astral Sand King.',
- 'Explore the flooded temple and defeat the Deepwater Keeper.',
- 'Climb the shining ice shelves and defeat the Glacier Colossus.',
+ 'FREE EXPLORATION: Dive through the sunken temple, gather its treasure and follow the lights to the exit. No guardian battle.',
+ 'FREE EXPLORATION: Explore the crystal glacier, collect coins and follow the glowing path to the exit. No guardian battle.',
  'Find the moonlit village key and defeat the Nightwatch Knight.',
- 'Race through flower fields and defeat the Thornback Champion.',
+ 'FREE EXPLORATION: Enjoy the wildflower valley, collect coins and discover its hidden treasure before exiting. No guardian battle.',
  'Survive the lightning ridge and defeat the Stormbreaker.',
  'Light the obsidian caverns and defeat the Shadow Core.',
  'Cross the burning highlands and defeat the Phoenix Warden.',
- 'Dash through neon city and shut down its machine guardian.',
+ 'FREE EXPLORATION: Cruise through neon circuit city, collect coins and find the portal onward. No guardian battle.',
  'Restore the celestial gardens and defeat the Dreamweaver.',
  'Cross the giant’s stone road and defeat the Mountain King.',
- 'Follow the dreamwood trail and defeat the Enchanted Ancient.',
+ 'FREE EXPLORATION: Wander dreamwood, collect coins and uncover secret treasure before reaching the exit. No guardian battle.',
  'Defeat the guardian of Ethan’s Grand Kingdom and claim the crown.'
 ];
 let missionBubbleTimer=0;
@@ -223,7 +228,7 @@ function showWorldMissionBubble(){
  if(!el||!title||!text)return;
  hideWorldMissionBubble();
  title.textContent='LEVEL '+(world+1)+' — '+themes[world].name.toUpperCase();
- text.textContent=worldMissions[world]||'Keep moving forward and complete the kingdom mission!';
+ text.textContent=isFreeRoam()?'FREE ROAM — '+(isSwimming()?'SWIM, ':'')+'COLLECT COINS & TREASURE, FIND THE EXIT. NO GUARDIAN!':(worldMissions[world]||'Keep moving forward and complete the kingdom mission!');
  positionMissionBubble();
  el.classList.add('show');
  missionBubbleTimer=setTimeout(hideWorldMissionBubble,6500);
@@ -251,13 +256,13 @@ function resetWorld(){
  ['deer','runner','fox'],['snake','hopper','frog'],['vulture','flyer','bat'],['boar','walker','hyena'],
  ['mountain-goat','runner','goat'],['monkey','hopper','leopard'],['arctic-fox','walker','wolf'],['hawk','flyer','fox'],
  ['cave-spider','walker','bat'],['frog','hopper','monkey'],['boar','runner','leopard'],['deer','walker','fox']
-]; const kinds=enemyKinds[world%enemyKinds.length]; for(let i=0;i<34;i++){let x=520+i*245+(i%3)*35;enemies.push({x,y:558,w:38,h:44,vx:i%2?-.8:.8,vy:0,alive:true,type:kinds[i%kinds.length]})}
- for(let i=0;i<70;i++){let x=140+i*118;items.push({x,y:530-(i%6)*34,type:i%23===0?'wonder':i%12===0?'star':i%9===0?'fire':i%7===0?'heart':'coin',got:false,bob:Math.random()*6})}
+]; const kinds=enemyKinds[world%enemyKinds.length]; if(!isFreeRoam())for(let i=0;i<34;i++){let x=520+i*245+(i%3)*35;enemies.push({x,y:558,w:38,h:44,vx:i%2?-.8:.8,vy:0,alive:true,type:kinds[i%kinds.length]})}
+ for(let i=0;i<(isFreeRoam()?115:70);i++){let x=140+i*(isFreeRoam()?72:118);items.push({x,y:isSwimming()?250+(i%7)*42:530-(i%6)*34,type:i%23===0?'wonder':i%12===0?'star':i%9===0?'fire':i%7===0?'heart':'coin',got:false,bob:Math.random()*6})}
  secretCaches=[{x:1180,y:470,got:false},{x:2780,y:355,got:false},{x:4620,y:395,got:false},{x:6760,y:415,got:false}];
  const bossKinds=['bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','tiger','shark','octopus','robot','unicorn','panda','whale','jaguar','scorpion','kraken','ice-golem','owl','stag','storm-beast','shadow-drake','phoenix','mech-king','fairy-queen','stone-giant','dream-beast','grand-guardian'];
  const bossNames=['MEADOW SENTINEL','DUNE WARDEN','FOREST COLOSSUS','CRYSTAL GUARDIAN','FROST COMMANDER','SKY SENTINEL','MAGMA WARLORD','ROYAL WARDEN','RUIN KNIGHT','MARSH GUARDIAN','DRAGON COMMANDER','TIDAL CAPTAIN','THUNDER WARDEN','LOST SENTINEL','SHADOW KNIGHT','GOLDEN CHAMPION','FORTRESS WARLORD','ARCANE GUARDIAN','DARK COMMANDER','ULTIMATE KING','AURORA LEVIATHAN','CORAL EMPRESS','CLOCKWORK OVERLORD','SUGARSTORM WIZARD','BAMBOO ANCIENT','SAPPHIRE TITAN','EMERALD PREDATOR','ASTRAL SAND KING','DEEPWATER KRAKEN','GLACIER COLOSSUS','MOONWATCH KNIGHT','THORNBACK CHAMPION','STORMBREAKER','OBSIDIAN CORE','PHOENIX WARDEN','NEON MACHINE KING','CELESTIAL DREAMWEAVER','MOUNTAIN KING','ENCHANTED ANCIENT','GRAND KINGDOM GUARDIAN'];
- const bossEmotes=['😡','🐍','💪','😤','💥','🐺','🔥','👑','🐻','🐍','🦍','🐊','🦏','🐺','🐗','🐯','👹','⚡','💪','👑','🦈','🐙','🤖','🦄','🐼','🐳','🐆','🦂','🐉','🧊','🦉','🦌','⚡','🐲','🔥','🤖','🧚','🗿','✨','👑']; boss={x:7900,y:500,w:110,h:100,vx:0,vy:0,alive:true,hp:6,maxHp:6,type:bossKinds[world],name:bossNames[world],emote:bossEmotes[world],hitFlash:0,hitCooldown:0,attackCooldown:1.15,attackFlash:0,defeated:false,face:-1}; goal={x:8080,y:465};
- player={x:70,y:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false};
+ const bossEmotes=['😡','🐍','💪','😤','💥','🐺','🔥','👑','🐻','🐍','🦍','🐊','🦏','🐺','🐗','🐯','👹','⚡','💪','👑','🦈','🐙','🤖','🦄','🐼','🐳','🐆','🦂','🐉','🧊','🦉','🦌','⚡','🐲','🔥','🤖','🧚','🗿','✨','👑']; boss={x:7900,y:500,w:110,h:100,vx:0,vy:0,alive:!isFreeRoam(),hp:6,maxHp:6,type:bossKinds[world],name:bossNames[world],emote:bossEmotes[world],hitFlash:0,hitCooldown:0,attackCooldown:1.15,attackFlash:0,defeated:false,face:-1}; goal={x:8080,y:465};
+ player={x:70,y:isSwimming()?300:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false};
 }
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function jump(){if(!running||paused)return;if(player.on){player.vy=wonderTime>0?-16:-13;player.on=false;burst(player.x+20,player.y+58,wonderTime>0?14:6);sfx('jump')}}
@@ -305,7 +310,7 @@ function update(dt){
        if(transitionId===worldTransitionId){playMusic();showWorldMissionBubble()}
      }else{
        running=false;gameState='complete';stopAllMusic();hideWorldMissionBubble();clearSavedRun();
-       msg('🏆 KINGDOM COMPLETE! '+finishEmote+' Score '+score);showStart('MISSION COMPLETE!','Ethan rescued Fedora and conquered all 20 kingdoms! Final score: '+score,'PLAY AGAIN');
+       msg('🏆 KINGDOM COMPLETE! '+finishEmote+' Score '+score);showStart('MISSION COMPLETE!','Ethan rescued Fedora and conquered all 40 kingdoms! Final score: '+score,'PLAY AGAIN');
      }
    }
    return;
@@ -317,7 +322,7 @@ function update(dt){
  if(left&&right)player.vx*=Math.pow(.55,frameScale);
  player.vx=Math.max(-max,Math.min(max,player.vx));if(Math.abs(player.vx)>.2)player.face=Math.sign(player.vx);
  if(crouching&&player.on) player.vx*=Math.pow(.82,frameScale);
- const prevY=player.y; player.vy+=(BADGES[badgeIndex].id==='feather'&&player.vy>0&&(keys.ArrowUp||keys.w||keys.W||keys[' '])?.28:.65)*frameScale;player.x+=player.vx*frameScale;player.y+=player.vy*frameScale;player.on=false; player.x=Math.max(0,Math.min(8380,player.x));
+ const prevY=player.y; if(isSwimming()){const swimUp=keys.ArrowUp||keys.w||keys.W||keys[' ']||gamepadKeys.sprint;const swimDown=keys.ArrowDown||keys.c||keys.C||gamepadKeys.crouch;player.vy+=(swimUp?-.72:swimDown?.58:-.025)*frameScale;player.vy*=Math.pow(.91,frameScale);player.vy=Math.max(-5.2,Math.min(5.2,player.vy));if(swimUp&&Math.random()<.10)burst(player.x+20,player.y+player.h,2);}else player.vy+=(BADGES[badgeIndex].id==='feather'&&player.vy>0&&(keys.ArrowUp||keys.w||keys.W||keys[' '])?.28:.65)*frameScale;player.x+=player.vx*frameScale;player.y+=player.vy*frameScale;player.on=false; player.x=Math.max(0,Math.min(8380,player.x));if(isSwimming())player.y=Math.max(105,Math.min(540,player.y));
  for(const p of platforms)if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y+player.h>=p.y&&prevY+player.h<=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.on=true}
  for(const e of enemies)if(e.alive){
   // Do not simulate enemies far outside the active camera area.
@@ -404,7 +409,7 @@ if(rect(player,{x:boss.x,y:boss.y,w:boss.w,h:boss.h})&&boss.hitCooldown<=0){if(p
  }
  timeLeft-=dt; if(timeLeft<=0){timeLeft=0;if(player.inv<=0&&player.shield<=0){damage();if(running){timeLeft=180;msg('TIME UP! TRY AGAIN!')}}} if(player.y>800){damage();if(running){player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;timeLeft=180}}
  if(player.x>checkpointX+1100){checkpointX=Math.min(6900,Math.floor(player.x/1200)*1200+70);checkpointY=350;saveRunProgress();msg('CHECKPOINT!')}
- if(!finishCelebration&&!boss.alive&&rect(player,{x:goal.x,y:goal.y,w:180,h:170})){
+ if(!finishCelebration&&(!boss.alive||isFreeRoam())&&rect(player,{x:goal.x,y:goal.y,w:180,h:170})){
    transitionLocked=true; finishCelebration=2.8; finishNextWorld=true; player.vx=0; player.vy=0;
    const emotes=['😄','🥳','🤩','😎','💪','😁','🔥','👑']; finishEmote=emotes[world%emotes.length];
    sfx('goal'); msg(finishEmote+' LEVEL COMPLETE! GREAT JOB!');
@@ -503,6 +508,8 @@ function draw(){
    ctx.fillStyle='#0002';ctx.fillRect(p.x,p.y+p.h-4,p.w,4);
  }
  drawWorldDecor(t);
+ // Calm exploration and underwater ambience for selected worlds.
+ if(isSwimming()){ctx.save();ctx.globalAlpha=.20;ctx.fillStyle='#19bde0';ctx.fillRect(cam,0,viewW,viewH);ctx.globalAlpha=.35;ctx.strokeStyle='#d8fbff';ctx.lineWidth=2;for(let i=0;i<18;i++){const bx=cam+((i*137+frameNow*.035)%(viewW+80))-40,by=80+((i*83+Math.sin(frameNow/700+i)*18)%Math.max(100,viewH-150));ctx.beginPath();ctx.arc(bx,by,4+(i%4)*2,0,Math.PI*2);ctx.stroke()}ctx.restore();}
  // stylized vegetation/landmarks
  if(!lowDetail) for(let i=0;i<platforms.length;i+=7){const p=platforms[i];if(p.x+p.w<cam-90||p.x>cam+viewW+90)continue;const x=p.x+35;ctx.fillStyle='#315f35';ctx.fillRect(x,p.y-48,8,48);ctx.beginPath();ctx.arc(x+4,p.y-55,25,0,7);ctx.fill();ctx.fillStyle='#ffffff18';ctx.beginPath();ctx.arc(x-5,p.y-60,8,0,7);ctx.fill();}
  for(const it of items)if(!it.got&&it.x>cam-80&&it.x<cam+viewW+80){const yy=it.y+Math.sin((frameNow/250)+it.bob)*4;ctx.save();ctx.translate(it.x,yy);if(it.type==='wonder'){ctx.shadowColor='#b88cff';ctx.shadowBlur=18;ctx.fillStyle='#d8a7ff';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(5,-5);ctx.lineTo(15,0);ctx.lineTo(5,5);ctx.lineTo(0,15);ctx.lineTo(-5,5);ctx.lineTo(-15,0);ctx.lineTo(-5,-5);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-3,-4,3,0,7);ctx.fill()}else if(it.type==='coin'){ctx.shadowColor='#ffd43b';ctx.shadowBlur=14;ctx.fillStyle='#ffd43b';ctx.beginPath();ctx.ellipse(0,0,9,12,0,0,7);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#9a6500';ctx.font='bold 12px Arial';ctx.fillText('C',-4,4)}else if(it.type==='fire'){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,13,0,7);ctx.fill();ctx.fillStyle='#f04a32';ctx.beginPath();ctx.arc(-4,-1,7,0,7);ctx.fill();ctx.fillStyle='#ffb52e';ctx.beginPath();ctx.arc(4,2,6,0,7);ctx.fill()}else if(it.type==='heart'){ctx.fillStyle='#ff4c66';ctx.font='26px Arial';ctx.fillText('♥',-12,9)}else{star(0,0,15)}ctx.restore()}
@@ -540,7 +547,7 @@ function draw(){
  ctx.fillStyle='#f0dfc2';ctx.fillRect(doorX-10,homeY+70,7,35);ctx.fillRect(doorX+50,homeY+70,7,35);
  // flower beds
  for(let i=0;i<8;i++){ctx.fillStyle=i%2?'#e56b75':'#f3c84b';ctx.beginPath();ctx.arc(homeX+12+i*25,homeY+99,4,0,7);ctx.fill();ctx.fillStyle='#397a3b';ctx.fillRect(homeX+10+i*25,homeY+99,3,9);}
- ctx.fillStyle='#fff';ctx.font='900 20px Arial';ctx.fillText('HOME',homeX+82,homeY-72);
+ ctx.fillStyle='#fff';ctx.font='900 20px Arial';ctx.fillText(isFreeRoam()?'EXIT →':'HOME',homeX+82,homeY-72);
  if(!boss.alive){ctx.fillStyle='#ffe66d';ctx.font='900 22px Arial';ctx.fillText('🏆 BOSS DEFEATED — HOME AWAITS!',goal.x-170,goal.y-55);}
  }
  drawSecretCaches();
