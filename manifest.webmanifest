@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "Super Kingdom Adventure",
+  "short_name": "Super Kingdom",
+  "description": "Explore 20 kingdoms, defeat guardians and rescue Fedora.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "any",
+  "background_color": "#0b1526",
+  "theme_color": "#0b1526",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Adventure",
+      "short_name": "Play",
+      "url": "/"
+    }
+  ]
+}
