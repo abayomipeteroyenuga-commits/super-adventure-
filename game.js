@@ -23,7 +23,8 @@ let running=false,last=0,cam=0,score=0,coins=0,stars=0,lives=3,world=0,level=1,t
 let finishCelebration=0, finishNextWorld=false, finishEmote='🥳', gameState='menu', transitionLocked=false, pauseBeforeHide=false;
 let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
-const keys={}, WORLD_COUNT=20;
+const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=20;
+const SAVE_KEY='ethan.superkingdom.save.v1';
 let audioCtx=null, musicGain=null, sfxGain=null, musicTimer=null, victoryTimer=null, musicOn=true, victoryActive=false, activeVoices=0;
 let sfxTimers=new Set(), worldTransitionId=0;
 let lastDrawNow=0, lowDetail=false, slowFrames=0, frameNow=0;
@@ -245,17 +246,17 @@ function update(dt){
      finishNextWorld=false;
      if(world<WORLD_COUNT-1){
        transitionLocked=true;
-       world=Math.min(WORLD_COUNT-1,world+1); level=1; resetWorld(); transitionLocked=false;
+       world=Math.min(WORLD_COUNT-1,world+1); level=1; resetWorld(); transitionLocked=false; saveRunProgress();
        if(transitionId===worldTransitionId){playMusic();showWorldMissionBubble()}
      }else{
-       running=false;gameState='complete';stopAllMusic();hideWorldMissionBubble();
+       running=false;gameState='complete';stopAllMusic();hideWorldMissionBubble();clearSavedRun();
        msg('🏆 KINGDOM COMPLETE! '+finishEmote+' Score '+score);showStart('MISSION COMPLETE!','Ethan rescued Fedora and conquered all 20 kingdoms! Final score: '+score,'PLAY AGAIN');
      }
    }
    return;
  }
- let left=keys.ArrowLeft||keys.a||keys.A,right=keys.ArrowRight||keys.d||keys.D; const crouching=keys.ArrowDown||keys.c||keys.C||keys.z||keys.Z; player.crouch=!!crouching;
- const sprinting=keys.shift||keys.x||keys.X;
+ let left=keys.ArrowLeft||keys.a||keys.A||gamepadKeys.left,right=keys.ArrowRight||keys.d||keys.D||gamepadKeys.right; const crouching=keys.ArrowDown||keys.c||keys.C||keys.z||keys.Z||gamepadKeys.crouch; player.crouch=!!crouching;
+ const sprinting=keys.shift||keys.x||keys.X||gamepadKeys.sprint;
  const max=crouching?2.5:(sprinting?9:(player.sprint>0?8:6));
  if(left)player.vx-=1.15*frameScale;if(right)player.vx+=1.15*frameScale;if(!left&&!right){player.vx*=Math.pow(.62,frameScale);if(Math.abs(player.vx)<.08)player.vx=0;}
  if(left&&right)player.vx*=Math.pow(.55,frameScale);
@@ -345,7 +346,7 @@ if(rect(player,{x:boss.x,y:boss.y,w:boss.w,h:boss.h})&&boss.hitCooldown<=0){if(p
   return;
  }
  timeLeft-=dt; if(timeLeft<=0){timeLeft=0;if(player.inv<=0&&player.shield<=0){damage();if(running){timeLeft=180;msg('TIME UP! TRY AGAIN!')}}} if(player.y>800){damage();if(running){player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;timeLeft=180}}
- if(player.x>checkpointX+1100){checkpointX=Math.min(6900,Math.floor(player.x/1200)*1200+70);checkpointY=350;msg('CHECKPOINT!')}
+ if(player.x>checkpointX+1100){checkpointX=Math.min(6900,Math.floor(player.x/1200)*1200+70);checkpointY=350;saveRunProgress();msg('CHECKPOINT!')}
  if(!finishCelebration&&!boss.alive&&rect(player,{x:goal.x,y:goal.y,w:180,h:170})){
    transitionLocked=true; finishCelebration=2.8; finishNextWorld=true; player.vx=0; player.vy=0;
    const emotes=['😄','🥳','🤩','😎','💪','😁','🔥','👑']; finishEmote=emotes[world%emotes.length];
@@ -850,16 +851,22 @@ function loop(t){
 }
 function resumeLoop(){if(running&&!paused&&!shopOpen&&!rafId){last=performance.now();rafId=requestAnimationFrame(loop)}}
 function validateProgress(){world=Math.max(0,Math.min(WORLD_COUNT-1,Math.floor(Number(world)||0)));if(!Number.isFinite(score))score=0;if(!Number.isFinite(coins)||coins<0)coins=0;if(!Number.isFinite(stars)||stars<0)stars=0;if(!Number.isFinite(lives)||lives<0)lives=0;}
-function start(){
+function readSavedRun(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||s.version!==1||!Number.isInteger(s.world)||s.world<0||s.world>=WORLD_COUNT)return null;return s}catch(_){return null}}
+function saveRunProgress(){try{if(!player)return;localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,world,score,coins,stars,lives,timeLeft,checkpointX,checkpointY,x:Math.max(checkpointX,Math.min(player.x,checkpointX+150)),y:Math.min(player.y,checkpointY),power:player.power,fire:player.fire,sprint:player.sprint,shield:player.shield}));refreshContinueButton()}catch(err){console.warn('Progress could not be saved:',err)}}
+function clearSavedRun(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}refreshContinueButton()}
+function refreshContinueButton(){const b=document.getElementById('continue');if(b)b.hidden=!readSavedRun()}
+function start(resume=false){
  hideWorldMissionBubble();
  if(rafId){cancelAnimationFrame(rafId);rafId=0}
  stopAllMusic();
  for(const k in keys)keys[k]=false;
- lives=3;coins=0;stars=0;score=0;world=0;level=1;timeLeft=180;
+ const saved=resume?readSavedRun():null;if(!resume)clearSavedRun();
+ lives=saved?Math.max(1,Math.min(9,Number(saved.lives)||3)):3;coins=saved?Math.max(0,Number(saved.coins)||0):0;stars=saved?Math.max(0,Number(saved.stars)||0):0;score=saved?Math.max(0,Number(saved.score)||0):0;world=saved?Math.max(0,Math.min(WORLD_COUNT-1,Number(saved.world)||0)):0;level=1;timeLeft=saved?Math.max(15,Math.min(180,Number(saved.timeLeft)||180)):180;
  finishCelebration=0;finishNextWorld=false;finishEmote='🥳';transitionLocked=false;
  rescueSequence=0;rescueDone=false;shopOpen=false;paused=false;gameState='playing';
  try{
    resetWorld();
+   if(saved){checkpointX=Math.max(70,Math.min(6900,Number(saved.checkpointX)||70));checkpointY=Number(saved.checkpointY)||350;player.x=Math.max(checkpointX,Math.min(checkpointX+150,Number(saved.x)||checkpointX));player.y=Math.max(120,Math.min(520,Number(saved.y)||checkpointY));player.power=saved.power==='fire'?'fire':'small';player.fire=Math.max(0,Math.min(16,Number(saved.fire)||0));player.sprint=Math.max(0,Math.min(18,Number(saved.sprint)||0));player.shield=Math.max(0,Math.min(12,Number(saved.shield)||0));}
    validateProgress();
    running=true;
    last=performance.now();
@@ -877,7 +884,7 @@ function start(){
  }
 }
 document.getElementById('closeMissionBubble').onclick=hideWorldMissionBubble;
-document.getElementById('play').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start()}; document.getElementById('audioBtn').onclick=()=>{initAudio();musicOn=!musicOn;document.getElementById('audioBtn').textContent=musicOn?'🔊':'🔇';if(musicOn)playMusic();else {stopAllMusic()}};document.getElementById('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw();}else resumeLoop();};
+document.getElementById('play').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};document.getElementById('continue').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};refreshContinueButton(); document.getElementById('audioBtn').onclick=()=>{initAudio();musicOn=!musicOn;document.getElementById('audioBtn').textContent=musicOn?'🔊':'🔇';if(musicOn)playMusic();else {stopAllMusic()}};document.getElementById('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw();}else resumeLoop();};
 addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','Shift','w','W','a','A','d','D','f','F','t','T','g','G','s','S','x','X','c','C','z','Z','ArrowDown','p','P','Escape'].includes(e.key))e.preventDefault();const wasDown=!!keys[e.key];keys[e.key]=true;if(e.repeat||wasDown)return;if(['ArrowUp','w','W',' '].includes(e.key))jump();if(['f','F','t','T','g','G'].includes(e.key))fire();if(['s','S'].includes(e.key))openShop();if(e.key==='Escape'){shopOpen=false;if(paused){paused=false;msg('RESUMED')}resumeLoop()}if(['p','P'].includes(e.key)&&running&&!shopOpen){paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}else resumeLoop()}if(!running&&e.key==='Enter')start()});
 addEventListener('keyup',e=>keys[e.key]=false);
 addEventListener('visibilitychange',()=>{if(document.hidden&&running){pauseBeforeHide=paused;paused=true;for(const k in keys)keys[k]=false;if(rafId){cancelAnimationFrame(rafId);rafId=0}if(audioCtx&&audioCtx.state==='running')audioCtx.suspend().catch(()=>{});}else if(running){paused=pauseBeforeHide;if(audioCtx&&musicOn&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});if(!paused)resumeLoop()}});
@@ -887,3 +894,34 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 
 window.addEventListener('error',e=>{console.error('Super Kingdom Adventure error:',e.error||e.message)});
 window.addEventListener('unhandledrejection',e=>console.error('Unhandled game promise:',e.reason));
+
+
+// Standard gamepad support: D-pad/left stick, A jump, X fire, Y shop, Start pause.
+const gamepadEdges={jump:false,fire:false,shop:false,pause:false,start:false};
+function pollGamepads(){
+ try{
+  const pads=navigator.getGamepads?navigator.getGamepads():[];
+  const pad=Array.from(pads||[]).find(p=>p&&p.connected);
+  if(pad){
+   const axis=pad.axes||[],buttons=pad.buttons||[];
+   const pressed=i=>!!(buttons[i]&&(buttons[i].pressed||buttons[i].value>.55));
+   const left=axis[0]<-.28||pressed(14),right=axis[0]>.28||pressed(15);
+   gamepadKeys.left=left;gamepadKeys.right=right;gamepadKeys.crouch=axis[1]>.55||pressed(13);gamepadKeys.sprint=pressed(1)||pressed(5);
+   const jumpNow=pressed(0)||pressed(12),fireNow=pressed(2),shopNow=pressed(3),pauseNow=pressed(9),startNow=pressed(StartButtonIndex());
+   if(jumpNow&&!gamepadEdges.jump)jump();
+   if(fireNow&&!gamepadEdges.fire)fire();
+   if(shopNow&&!gamepadEdges.shop)openShop();
+   if(pauseNow&&!gamepadEdges.pause&&running&&!shopOpen){paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}else resumeLoop();}
+   if(startNow&&!gamepadEdges.start&&!running)start();
+   gamepadEdges.jump=jumpNow;gamepadEdges.fire=fireNow;gamepadEdges.shop=shopNow;gamepadEdges.pause=pauseNow;gamepadEdges.start=startNow;
+  }else{
+   gamepadKeys.left=gamepadKeys.right=gamepadKeys.crouch=gamepadKeys.sprint=false;
+   gamepadEdges.jump=gamepadEdges.fire=gamepadEdges.shop=gamepadEdges.pause=gamepadEdges.start=false;
+  }
+ }catch(err){console.warn('Gamepad input unavailable:',err)}
+ requestAnimationFrame(pollGamepads);
+}
+function StartButtonIndex(){return 9}
+if(navigator.getGamepads)requestAnimationFrame(pollGamepads);
+addEventListener('gamepadconnected',()=>msg('🎮 CONTROLLER CONNECTED'));
+addEventListener('gamepaddisconnected',()=>{gamepadKeys.left=gamepadKeys.right=gamepadKeys.crouch=gamepadKeys.sprint=false;msg('CONTROLLER DISCONNECTED')});
