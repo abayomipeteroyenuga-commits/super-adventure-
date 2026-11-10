@@ -28,7 +28,7 @@ const SAVE_KEY='ethan.superkingdom.save.v1';
 const BADGES=[{id:'feather',name:'FEATHER GLIDE',desc:'Hold jump while falling to glide'},{id:'magnet',name:'COIN MAGNET',desc:'Attract nearby coins automatically'},{id:'stomp',name:'POWER STOMP',desc:'Stronger enemy bounces and bonus points'}];
 let badgeIndex=0,wonderTime=0,wonderPulse=0,secretReveal=0,wonderSeeds=0,companionMood=0;
 let secretCaches=[];
-let audioCtx=null, musicGain=null, sfxGain=null, musicTimer=null, victoryTimer=null, musicOn=true, victoryActive=false, activeVoices=0;
+let audioCtx=null, musicGain=null, sfxGain=null, musicTimer=null, victoryTimer=null, musicOn=true, victoryActive=false, activeVoices=0, musicTrackIndex=-1;
 let sfxTimers=new Set(), worldTransitionId=0;
 let lastDrawNow=0, lowDetail=false, slowFrames=0, frameNow=0;
 let skyGradientCache={key:'',gradient:null};
@@ -67,11 +67,18 @@ function playMusic(){
  if(!audioCtx||!musicOn)return;
  if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
  stopVictoryMusic(); if(musicTimer){clearTimeout(musicTimer);musicTimer=null}
- let i=0; const tr=musicTracks[world%musicTracks.length];
+ let i=0; const tr=musicTracks[musicTrackIndex>=0?musicTrackIndex:world%musicTracks.length];
  const tick=()=>{musicTimer=null;if(!musicOn||!audioCtx||!running)return;if(!paused&&!shopOpen&&!victoryActive){const n=tr.mel[i%tr.mel.length],b=tr.bass[Math.floor(i/2)%tr.bass.length];tone(n,.18,'triangle',.62,'music');if(i%2===0)tone(b,.28,'sine',.26,'music');if(i%4===3)tone(n*2,.07,'square',.12,'music');i++;}musicTimer=setTimeout(tick,Math.max(120,tr.beat));};
  musicTimer=setTimeout(tick,40);
 }
 function victoryToneAt(freq,start,dur,type='triangle',gain=.42){if(!audioCtx||!musicOn||!musicGain)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,start);g.gain.setValueAtTime(Math.max(.0001,gain),start);g.gain.exponentialRampToValueAtTime(.001,start+dur);o.connect(g);g.connect(musicGain);o.start(start);o.stop(start+dur+.03)}
+function cycleMusicTrack(){
+ musicTrackIndex=(musicTrackIndex<0?world%musicTracks.length:musicTrackIndex+1)%musicTracks.length;
+ const names=['Sunny Quest','Desert Dash','Forest Magic','Crystal Run','Frost Adventure','Sky Journey','Volcano Rush','Royal Finale'];
+ const btn=document.getElementById('musicBtn');if(btn)btn.textContent='🎵 '+(musicTrackIndex+1)+'/8';
+ msg('NOW PLAYING: '+names[musicTrackIndex].toUpperCase());
+ if(musicOn&&running)playMusic();
+}
 function playVictoryMusic(){
  if(!audioCtx||!musicOn)return;if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});stopAllMusic();victoryActive=true;
  const melody=[523,659,784,1047,784,1047,1319,1047,784,1047,1319,1568],bass=[131,131,165,196,131,165,196,262];
@@ -652,6 +659,10 @@ function drawHero(px,py){
  ctx.fillStyle='#f45a52';roundRectSafe(ctx,-10,-45,18,3,2);ctx.fill();
  ctx.fillStyle='#b8272b';roundRectSafe(ctx,-12,-42,32,6,3);ctx.fill();
  ctx.fillStyle='#fff';ctx.font='900 10px Arial';ctx.textAlign='center';ctx.fillText('E',3,-37.2);
+  // Polished gold stitch, star pin and side highlight on Ethan's signature cap.
+  ctx.fillStyle='#ffe36a';ctx.beginPath();ctx.arc(3,-40,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.arc(2.2,-40.8,.8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#ff9c82';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-9,-43);ctx.quadraticCurveTo(-3,-48,5,-47);ctx.stroke();
 
  // Expressive side-facing face.
  ctx.fillStyle='#3b2118';roundRectSafe(ctx,9,-34,8,2.3,1);ctx.fill(); // eyebrow
@@ -898,7 +909,7 @@ function start(resume=false){
 }
 document.getElementById('wonderBtn')?.addEventListener('click',activateWonder);document.getElementById('badgeBtn')?.addEventListener('click',cycleBadge);
 document.getElementById('closeMissionBubble').onclick=hideWorldMissionBubble;
-document.getElementById('play').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};document.getElementById('continue').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};refreshContinueButton(); document.getElementById('audioBtn').onclick=()=>{initAudio();musicOn=!musicOn;document.getElementById('audioBtn').textContent=musicOn?'🔊':'🔇';if(musicOn)playMusic();else {stopAllMusic()}};document.getElementById('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw();}else resumeLoop();};
+document.getElementById('play').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};document.getElementById('continue').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};refreshContinueButton(); document.getElementById('audioBtn').onclick=()=>{initAudio();musicOn=!musicOn;document.getElementById('audioBtn').textContent=musicOn?'🔊':'🔇';if(musicOn)playMusic();else {stopAllMusic()}};document.getElementById('musicBtn').onclick=()=>{initAudio();cycleMusicTrack()};document.getElementById('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw();}else resumeLoop();};
 addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','Shift','w','W','a','A','d','D','f','F','t','T','g','G','s','S','x','X','c','C','z','Z','ArrowDown','p','P','Escape'].includes(e.key))e.preventDefault();const wasDown=!!keys[e.key];keys[e.key]=true;if(e.repeat||wasDown)return;if(['ArrowUp','w','W',' '].includes(e.key))jump();if(['f','F','t','T','g','G'].includes(e.key))fire();if(['s','S'].includes(e.key))openShop();if(['e','E'].includes(e.key))activateWonder();if(['b','B'].includes(e.key))cycleBadge();if(e.key==='Escape'){shopOpen=false;if(paused){paused=false;msg('RESUMED')}resumeLoop()}if(['p','P'].includes(e.key)&&running&&!shopOpen){paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}else resumeLoop()}if(!running&&e.key==='Enter')start()});
 addEventListener('keyup',e=>keys[e.key]=false);
 addEventListener('visibilitychange',()=>{if(document.hidden&&running){pauseBeforeHide=paused;paused=true;for(const k in keys)keys[k]=false;if(rafId){cancelAnimationFrame(rafId);rafId=0}if(audioCtx&&audioCtx.state==='running')audioCtx.suspend().catch(()=>{});}else if(running){paused=pauseBeforeHide;if(audioCtx&&musicOn&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});if(!paused)resumeLoop()}});
