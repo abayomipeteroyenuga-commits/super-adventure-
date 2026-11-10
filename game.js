@@ -135,9 +135,9 @@ const themes=[
  {name:'Phoenix Highlands',sky1:'#7c3441',sky2:'#ffc17b',ground:'#ad5944',soil:'#58313b',accent:'#ffe58b'},
  {name:'Neon Circuit City',sky1:'#121d4d',sky2:'#5fdde5',ground:'#286b9b',soil:'#202b55',accent:'#ff63da'},
  {name:'Celestial Gardens',sky1:'#433b85',sky2:'#f4c9f0',ground:'#8d78bd',soil:'#4d4777',accent:'#fff0a6'},
- {name:'Giant's Causeway',sky1:'#3d6174',sky2:'#c0d7d5',ground:'#668b78',soil:'#3c5b60',accent:'#f6e3a0'},
+ {name:'Giant’s Causeway',sky1:'#3d6174',sky2:'#c0d7d5',ground:'#668b78',soil:'#3c5b60',accent:'#f6e3a0'},
  {name:'Dreamwood Kingdom',sky1:'#4b3974',sky2:'#c6b4ee',ground:'#6f669e',soil:'#3f365d',accent:'#ffc5ed'},
- {name:'Ethan's Grand Kingdom',sky1:'#172f59',sky2:'#ffe7a0',ground:'#d4a84f',soil:'#55406b',accent:'#fff5c7'}
+ {name:'Ethan’s Grand Kingdom',sky1:'#172f59',sky2:'#ffe7a0',ground:'#d4a84f',soil:'#55406b',accent:'#fff5c7'}
 ];
 const ethanOutfits=[
  {name:'MEADOW EXPLORER',shirt:'#2f8f4e',pants:'#6b4b2a',shoe:'#f5f0d0',sole:'#2c7a4b',accent:'#ffe36a'},
