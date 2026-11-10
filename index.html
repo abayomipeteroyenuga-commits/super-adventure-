@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Super Kingdom Adventure</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SUPER KINGDOM ADVENTURE | Ethan Digital Academy</title>
+<meta name="description" content="Explore 20 kingdoms, defeat guardians, collect powers and rescue Fedora in Super Kingdom Adventure by Ethan Digital Academy.">
+<meta name="theme-color" content="#0b1526">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-family:Arial,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}
 #game{display:block;width:min(100vw,1100px);height:100dvh;min-height:320px;margin:0 auto;image-rendering:auto;background:#76c9ff;filter:saturate(1.08) contrast(1.03);touch-action:none}
@@ -22,7 +29,7 @@
 .panel h1 .gold{color:#ffd85a;text-shadow:0 5px 0 #8e641a,0 12px 28px #000b}
 .startStory{max-width:650px;color:#dce9f8!important;font-size:clamp(14px,1.8vw,18px);line-height:1.55!important;margin:20px 0 20px!important;text-align:left}
 .startQuest{display:grid;grid-template-columns:repeat(2,minmax(145px,1fr));gap:9px;width:min(540px,100%);margin:0 0 24px}.startQuest span{padding:10px 12px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff18;font-size:12px;font-weight:900;color:#d7eaff;text-align:left;box-shadow:inset 0 1px #ffffff0d}
-#play{border:1px solid #fff6;border-radius:16px;padding:16px 36px;font-size:clamp(16px,2.5vw,21px);font-weight:1000;letter-spacing:1px;cursor:pointer;color:#251b08;background:linear-gradient(180deg,#fff19b,#f6c43d 60%,#dfa11f);box-shadow:0 8px 0 #87570f,0 15px 34px #0009,0 0 30px #ffd85a22;touch-action:manipulation;transition:transform .15s,filter .15s}#play:hover{filter:brightness(1.08);transform:translateY(-2px)}#play:active{transform:translateY(4px);box-shadow:0 3px 0 #87570f}
+.startActions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}#continue{border:1px solid #ffffff55;border-radius:16px;padding:16px 22px;font-size:clamp(14px,2vw,18px);font-weight:1000;cursor:pointer;color:#fff;background:linear-gradient(180deg,#345b83,#1b3555);box-shadow:0 7px 0 #0a1728;touch-action:manipulation}#continue[hidden]{display:none}#play{border:1px solid #fff6;border-radius:16px;padding:16px 36px;font-size:clamp(16px,2.5vw,21px);font-weight:1000;letter-spacing:1px;cursor:pointer;color:#251b08;background:linear-gradient(180deg,#fff19b,#f6c43d 60%,#dfa11f);box-shadow:0 8px 0 #87570f,0 15px 34px #0009,0 0 30px #ffd85a22;touch-action:manipulation;transition:transform .15s,filter .15s}#play:hover{filter:brightness(1.08);transform:translateY(-2px)}#play:active{transform:translateY(4px);box-shadow:0 3px 0 #87570f}
 .startSide{position:relative;z-index:1;display:flex;justify-content:center}
 .missionCard{width:min(360px,100%);padding:24px;border-radius:26px;border:1px solid #f8d36a88;background:linear-gradient(180deg,#162b48e8,#0b1628f5);box-shadow:0 24px 55px #0008,inset 0 0 35px #6edcff0e;text-align:center}
 .startCrest{width:96px;height:96px;display:grid;place-items:center;margin:0 auto 14px;border:2px solid #f8d36a;border-radius:50%;font-size:46px;background:radial-gradient(circle,#3f6fa8,#14233a 72%);box-shadow:0 0 34px #69d8ff55,0 0 0 8px #ffffff0b}
@@ -53,9 +60,10 @@
 <div id="message"></div>
 <div id="missionBubble" aria-live="polite"><div class="bubbleCard"><button id="closeMissionBubble" class="closeBubble" aria-label="Close mission">×</button><div class="speaker">ETHAN • KINGDOM MISSION</div><div id="missionBubbleTitle" class="missionTitle"></div><div id="missionBubbleText" class="missionText"></div></div></div>
 
-<div id="start"><div class="panel"><section class="startHero"><div class="startBrand">ETHAN DIGITAL ACADEMY PRESENTS</div><div class="startEyebrow">⚔️ FANTASY PLATFORM ADVENTURE</div><h1>SUPER KINGDOM<br><span class="gold">ADVENTURE</span></h1><p class="startStory">Twenty kingdoms stand between Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.</p><div class="startQuest"><span>🌍 20 UNIQUE KINGDOMS</span><span>👑 ARMORED GUARDIANS</span><span>⭐ SHIELD & POWER-UPS</span><span>🏆 RESCUE FEDORA</span></div><button id="play">⚔ BEGIN MISSION</button></section><aside class="startSide"><div class="missionCard"><div class="startCrest">⚔️</div><div class="startMission">MISSION • RESCUE FEDORA</div><h2>THE KINGDOM QUEST</h2><p>Ethan must journey from the Meadow Kingdom to the Ultimate Kingdom and defeat every guardian blocking the path.</p><div class="missionSteps"><div class="missionStep"><b>1</b><span>Explore each kingdom and collect useful power-ups.</span></div><div class="missionStep"><b>2</b><span>Dodge enemies and guardian energy attacks.</span></div><div class="missionStep"><b>3</b><span>Defeat the boss, reach home, and unlock the next world.</span></div></div><div class="startHint">KEYBOARD + TOUCH CONTROLS SUPPORTED</div></div></aside></div></div>
+<div id="start"><div class="panel"><section class="startHero"><div class="startBrand">ETHAN DIGITAL ACADEMY PRESENTS</div><div class="startEyebrow">⚔️ FANTASY PLATFORM ADVENTURE</div><h1>SUPER KINGDOM<br><span class="gold">ADVENTURE</span></h1><p class="startStory">Twenty kingdoms stand between Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.</p><div class="startQuest"><span>🌍 20 UNIQUE KINGDOMS</span><span>👑 ARMORED GUARDIANS</span><span>⭐ SHIELD & POWER-UPS</span><span>🏆 RESCUE FEDORA</span></div><div class="startActions"><button id="play">⚔ BEGIN MISSION</button><button id="continue" type="button" hidden>▶ CONTINUE ADVENTURE</button></div></section><aside class="startSide"><div class="missionCard"><div class="startCrest">⚔️</div><div class="startMission">MISSION • RESCUE FEDORA</div><h2>THE KINGDOM QUEST</h2><p>Ethan must journey from the Meadow Kingdom to the Ultimate Kingdom and defeat every guardian blocking the path.</p><div class="missionSteps"><div class="missionStep"><b>1</b><span>Explore each kingdom and collect useful power-ups.</span></div><div class="missionStep"><b>2</b><span>Dodge enemies and guardian energy attacks.</span></div><div class="missionStep"><b>3</b><span>Defeat the boss, reach home, and unlock the next world.</span></div></div><div class="startHint">KEYBOARD • TOUCH • GAMEPAD CONTROLS</div></div></aside></div></div>
 <div id="touch"><div class="pad"><button class="btn" data-k="left">◀</button><button class="btn" data-k="right">▶</button></div><div class="pad"><button class="btn" data-k="jump">⬆</button><button class="btn" data-k="crouch">⬇</button><button class="btn" data-k="dash">⚡</button><button class="btn" data-k="fire">🔥</button><button class="btn" data-k="shop">🛒</button></div></div>
 <script src="game.js"></script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(err=>console.warn("Offline support unavailable:",err)));}</script>
 
 <script async src="https://track.ethandigitalacademy.org/ethan-analytics.js" data-ethan-app="ethan-superkingdom" data-ethan-public-id="c2966064-dc80-44cd-9182-7f29c14139a4"></script>
 </body>
