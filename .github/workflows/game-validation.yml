@@ -1,0 +1,25 @@
+name: Super Kingdom validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check game JavaScript syntax
+        run: node --check game.js
+      - name: Verify required game shell files
+        run: |
+          test -s index.html
+          test -s game.js
+          test -s manifest.webmanifest
+          test -s sw.js
+          test -s icon.svg
