@@ -200,9 +200,9 @@ const worldMissions=[
  'Cross the burning highlands and defeat the Phoenix Warden.',
  'Dash through neon city and shut down its machine guardian.',
  'Restore the celestial gardens and defeat the Dreamweaver.',
- 'Cross the giant's stone road and defeat the Mountain King.',
+ 'Cross the giant’s stone road and defeat the Mountain King.',
  'Follow the dreamwood trail and defeat the Enchanted Ancient.',
- 'Defeat the guardian of Ethan's Grand Kingdom and claim the crown.'
+ 'Defeat the guardian of Ethan’s Grand Kingdom and claim the crown.'
 ];
 let missionBubbleTimer=0;
 function hideWorldMissionBubble(){
@@ -699,7 +699,7 @@ function drawHero(px,py){
  ctx.fillStyle='#f45a52';roundRectSafe(ctx,-10,-45,18,3,2);ctx.fill();
  ctx.fillStyle='#b8272b';roundRectSafe(ctx,-12,-42,32,6,3);ctx.fill();
  ctx.fillStyle='#fff';ctx.font='900 10px Arial';ctx.textAlign='center';ctx.fillText('E',3,-37.2);
-  // Polished gold stitch, star pin and side highlight on Ethan's signature cap.
+  // Polished gold stitch, star pin and side highlight on Ethan’s signature cap.
   ctx.fillStyle='#ffe36a';ctx.beginPath();ctx.arc(3,-40,2.5,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.arc(2.2,-40.8,.8,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#ff9c82';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-9,-43);ctx.quadraticCurveTo(-3,-48,5,-47);ctx.stroke();
