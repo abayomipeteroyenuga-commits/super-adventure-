@@ -23,7 +23,7 @@ let running=false,last=0,cam=0,score=0,coins=0,stars=0,lives=3,world=0,level=1,t
 let finishCelebration=0, finishNextWorld=false, finishEmote='🥳', gameState='menu', transitionLocked=false, pauseBeforeHide=false;
 let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
-const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=20;
+const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=40;
 const SAVE_KEY='ethan.superkingdom.save.v1';
 const BADGES=[{id:'feather',name:'FEATHER GLIDE',desc:'Hold jump while falling to glide'},{id:'magnet',name:'COIN MAGNET',desc:'Attract nearby coins automatically'},{id:'stomp',name:'POWER STOMP',desc:'Stronger enemy bounces and bonus points'}];
 let badgeIndex=0,wonderTime=0,wonderPulse=0,secretReveal=0,wonderSeeds=0,companionMood=0;
@@ -117,7 +117,27 @@ const themes=[
  {name:'Monster Fortress',sky1:'#292531',sky2:'#8b3f45',ground:'#5b4648',soil:'#302b32',accent:'#ff6d5f'},
  {name:'Magic Castle',sky1:'#62529d',sky2:'#e1b5ed',ground:'#6c5d9b',soil:'#493c67',accent:'#ffb5ff'},
  {name:'The Dark Kingdom',sky1:'#181b2b',sky2:'#552d46',ground:'#41333f',soil:'#24222b',accent:'#e15b65'},
- {name:'The Ultimate Kingdom',sky1:'#9edfff',sky2:'#fff6cf',ground:'#78a45b',soil:'#6d5538',accent:'#ffd84d'}
+ {name:'The Ultimate Kingdom',sky1:'#9edfff',sky2:'#fff6cf',ground:'#78a45b',soil:'#6d5538',accent:'#ffd84d'},
+ {name:'Aurora Coast',sky1:'#173b69',sky2:'#8ce8e8',ground:'#267d83',soil:'#17485d',accent:'#b8fff4'},
+ {name:'Coral Reef Kingdom',sky1:'#087eaa',sky2:'#b5f6ed',ground:'#168e91',soil:'#075b72',accent:'#ffdf8a'},
+ {name:'Clockwork City',sky1:'#37415e',sky2:'#c3b6a0',ground:'#8a7657',soil:'#40394b',accent:'#f6c65b'},
+ {name:'Candy Cloudlands',sky1:'#a66ec4',sky2:'#ffe0f4',ground:'#d88fca',soil:'#8b5a9b',accent:'#fff2a6'},
+ {name:'Bamboo Sanctuary',sky1:'#1c6654',sky2:'#b8e6a0',ground:'#4f995f',soil:'#28563f',accent:'#d8f58b'},
+ {name:'Sapphire Ocean',sky1:'#064b83',sky2:'#76c9f2',ground:'#1675a4',soil:'#083c68',accent:'#8af4ff'},
+ {name:'Emerald Jungle',sky1:'#164b38',sky2:'#9bdb85',ground:'#367d4d',soil:'#214b36',accent:'#d2ff72'},
+ {name:'Starlight Desert',sky1:'#28275d',sky2:'#e6a8c8',ground:'#7e5685',soil:'#40304f',accent:'#ffe48a'},
+ {name:'Sunken Temple',sky1:'#174f61',sky2:'#8dd8cf',ground:'#347d7d',soil:'#254d5c',accent:'#9df7ff'},
+ {name:'Crystal Glacier',sky1:'#446b9b',sky2:'#e5fbff',ground:'#8fc9df',soil:'#496a89',accent:'#ffffff'},
+ {name:'Moonlit Village',sky1:'#202c58',sky2:'#9a9bd1',ground:'#536b8e',soil:'#303c5b',accent:'#f9e7a4'},
+ {name:'Wildflower Valley',sky1:'#70b8ce',sky2:'#fff0cf',ground:'#70a65b',soil:'#66533d',accent:'#ffb9cf'},
+ {name:'Thunderstorm Ridge',sky1:'#222f4d',sky2:'#a2bad0',ground:'#596e80',soil:'#303b4d',accent:'#f8ed79'},
+ {name:'Obsidian Caves',sky1:'#151b2c',sky2:'#685b87',ground:'#4d4568',soil:'#242336',accent:'#c4a4ff'},
+ {name:'Phoenix Highlands',sky1:'#7c3441',sky2:'#ffc17b',ground:'#ad5944',soil:'#58313b',accent:'#ffe58b'},
+ {name:'Neon Circuit City',sky1:'#121d4d',sky2:'#5fdde5',ground:'#286b9b',soil:'#202b55',accent:'#ff63da'},
+ {name:'Celestial Gardens',sky1:'#433b85',sky2:'#f4c9f0',ground:'#8d78bd',soil:'#4d4777',accent:'#fff0a6'},
+ {name:'Giant's Causeway',sky1:'#3d6174',sky2:'#c0d7d5',ground:'#668b78',soil:'#3c5b60',accent:'#f6e3a0'},
+ {name:'Dreamwood Kingdom',sky1:'#4b3974',sky2:'#c6b4ee',ground:'#6f669e',soil:'#3f365d',accent:'#ffc5ed'},
+ {name:'Ethan's Grand Kingdom',sky1:'#172f59',sky2:'#ffe7a0',ground:'#d4a84f',soil:'#55406b',accent:'#fff5c7'}
 ];
 const ethanOutfits=[
  {name:'MEADOW EXPLORER',shirt:'#2f8f4e',pants:'#6b4b2a',shoe:'#f5f0d0',sole:'#2c7a4b',accent:'#ffe36a'},
@@ -162,7 +182,27 @@ const worldMissions=[
  'The Monster Fortress blocks the way to Fedora. Break through the fortress path and defeat the monster commander.',
  'Magic fills the castle halls. Use your powers wisely and defeat the enchanted guardian standing between you and the Dark Kingdom.',
  'Fedora is very close now. Survive the Dark Kingdom, defeat its ruler, and open the road to the final fortress.',
- 'This is it! Fedora is inside the Ultimate Kingdom. Defeat the final boss, break the prison, and bring Fedora home!'
+ 'This is it! Fedora is inside the Ultimate Kingdom. Defeat the final boss, break the prison, and bring Fedora home!',
+ 'Ride the aurora winds along the coast and defeat the Tidewatch Guardian.',
+ 'Swim through glowing coral passages and challenge the Reef Queen.',
+ 'Outsmart clockwork traps and stop the brass sentinel.',
+ 'Bounce across candy bridges and defeat the Sugarstorm Sorcerer.',
+ 'Navigate the bamboo maze and face the Grove Guardian.',
+ 'Cross sapphire waves and defeat the Ocean Titan.',
+ 'Find the hidden jungle route and defeat the Emerald Beast.',
+ 'Follow the starlit dunes and defeat the Astral Sand King.',
+ 'Explore the flooded temple and defeat the Deepwater Keeper.',
+ 'Climb the shining ice shelves and defeat the Glacier Colossus.',
+ 'Find the moonlit village key and defeat the Nightwatch Knight.',
+ 'Race through flower fields and defeat the Thornback Champion.',
+ 'Survive the lightning ridge and defeat the Stormbreaker.',
+ 'Light the obsidian caverns and defeat the Shadow Core.',
+ 'Cross the burning highlands and defeat the Phoenix Warden.',
+ 'Dash through neon city and shut down its machine guardian.',
+ 'Restore the celestial gardens and defeat the Dreamweaver.',
+ 'Cross the giant's stone road and defeat the Mountain King.',
+ 'Follow the dreamwood trail and defeat the Enchanted Ancient.',
+ 'Defeat the guardian of Ethan's Grand Kingdom and claim the crown.'
 ];
 let missionBubbleTimer=0;
 function hideWorldMissionBubble(){
@@ -214,9 +254,9 @@ function resetWorld(){
 ]; const kinds=enemyKinds[world%enemyKinds.length]; for(let i=0;i<34;i++){let x=520+i*245+(i%3)*35;enemies.push({x,y:558,w:38,h:44,vx:i%2?-.8:.8,vy:0,alive:true,type:kinds[i%kinds.length]})}
  for(let i=0;i<70;i++){let x=140+i*118;items.push({x,y:530-(i%6)*34,type:i%23===0?'wonder':i%12===0?'star':i%9===0?'fire':i%7===0?'heart':'coin',got:false,bob:Math.random()*6})}
  secretCaches=[{x:1180,y:470,got:false},{x:2780,y:355,got:false},{x:4620,y:395,got:false},{x:6760,y:415,got:false}];
- const bossKinds=['bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','tiger'];
- const bossNames=['MEADOW SENTINEL','DUNE WARDEN','FOREST COLOSSUS','CRYSTAL GUARDIAN','FROST COMMANDER','SKY SENTINEL','MAGMA WARLORD','ROYAL WARDEN','RUIN KNIGHT','MARSH GUARDIAN','DRAGON COMMANDER','TIDAL CAPTAIN','THUNDER WARDEN','LOST SENTINEL','SHADOW KNIGHT','GOLDEN CHAMPION','FORTRESS WARLORD','ARCANE GUARDIAN','DARK COMMANDER','ULTIMATE KING'];
- const bossEmotes=['😡','🐍','💪','😤','💥','🐺','🔥','👑','🐻','🐍','🦍','🐊','🦏','🐺','🐗','🐯','👹','⚡','💪','👑']; boss={x:7900,y:500,w:110,h:100,vx:0,vy:0,alive:true,hp:6,maxHp:6,type:bossKinds[world],name:bossNames[world],emote:bossEmotes[world],hitFlash:0,hitCooldown:0,attackCooldown:1.15,attackFlash:0,defeated:false,face:-1}; goal={x:8080,y:465};
+ const bossKinds=['bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','tiger','shark','octopus','robot','unicorn','panda','whale','jaguar','scorpion','kraken','ice-golem','owl','stag','storm-beast','shadow-drake','phoenix','mech-king','fairy-queen','stone-giant','dream-beast','grand-guardian'];
+ const bossNames=['MEADOW SENTINEL','DUNE WARDEN','FOREST COLOSSUS','CRYSTAL GUARDIAN','FROST COMMANDER','SKY SENTINEL','MAGMA WARLORD','ROYAL WARDEN','RUIN KNIGHT','MARSH GUARDIAN','DRAGON COMMANDER','TIDAL CAPTAIN','THUNDER WARDEN','LOST SENTINEL','SHADOW KNIGHT','GOLDEN CHAMPION','FORTRESS WARLORD','ARCANE GUARDIAN','DARK COMMANDER','ULTIMATE KING','AURORA LEVIATHAN','CORAL EMPRESS','CLOCKWORK OVERLORD','SUGARSTORM WIZARD','BAMBOO ANCIENT','SAPPHIRE TITAN','EMERALD PREDATOR','ASTRAL SAND KING','DEEPWATER KRAKEN','GLACIER COLOSSUS','MOONWATCH KNIGHT','THORNBACK CHAMPION','STORMBREAKER','OBSIDIAN CORE','PHOENIX WARDEN','NEON MACHINE KING','CELESTIAL DREAMWEAVER','MOUNTAIN KING','ENCHANTED ANCIENT','GRAND KINGDOM GUARDIAN'];
+ const bossEmotes=['😡','🐍','💪','😤','💥','🐺','🔥','👑','🐻','🐍','🦍','🐊','🦏','🐺','🐗','🐯','👹','⚡','💪','👑','🦈','🐙','🤖','🦄','🐼','🐳','🐆','🦂','🐉','🧊','🦉','🦌','⚡','🐲','🔥','🤖','🧚','🗿','✨','👑']; boss={x:7900,y:500,w:110,h:100,vx:0,vy:0,alive:true,hp:6,maxHp:6,type:bossKinds[world],name:bossNames[world],emote:bossEmotes[world],hitFlash:0,hitCooldown:0,attackCooldown:1.15,attackFlash:0,defeated:false,face:-1}; goal={x:8080,y:465};
  player={x:70,y:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false};
 }
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
@@ -451,7 +491,7 @@ function draw(){
  ctx.save();ctx.translate(-cam*.12,0);
  // Parallax background adapts automatically on slower devices.
  const layers=lowDetail?1:3, hillCount=lowDetail?5:8;
- for(let layer=0;layer<layers;layer++){ctx.fillStyle=layer===0?'#78bb73':layer===1?'#63ad70':'#4f965e';for(let i=-2;i<hillCount;i++){const x=i*520+layer*170;ctx.beginPath();ctx.arc(x,620-layer*35,185-layer*22,Math.PI,0);ctx.fill();}}
+ for(let layer=0;layer<layers;layer++){ctx.fillStyle=layer===0?t.ground:layer===1?t.soil:t.accent;ctx.globalAlpha=layer===0?.22:layer===1?.16:.10;for(let i=-2;i<hillCount;i++){const x=i*520+layer*170;ctx.beginPath();ctx.arc(x,620-layer*35,185-layer*22,Math.PI,0);ctx.fill();}}
  if(!lowDetail){ctx.fillStyle='#ffffff55';for(let i=0;i<7;i++){const x=i*260+80;const y=85+(i%4)*48;ctx.beginPath();ctx.arc(x,y,28,0,7);ctx.arc(x+30,y-10,36,0,7);ctx.arc(x+66,y,25,0,7);ctx.fill();}}
  ctx.restore();
  ctx.save();ctx.translate(-cam,-camY);
