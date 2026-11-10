@@ -213,7 +213,7 @@ function resetWorld(){
  player={x:70,y:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false};
 }
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function jump(){if(!running||paused)return;if(player.on){player.vy=-13;player.on=false;burst(player.x+20,player.y+58,6);sfx('jump')}}
+function jump(){if(!running||paused)return;if(player.on){player.vy=wonderTime>0?-16:-13;player.on=false;burst(player.x+20,player.y+58,wonderTime>0?14:6);sfx('jump')}}
 function activateWonder(){if(!running||paused||wonderTime>0)return;wonderTime=9;wonderPulse=1;secretReveal=7;companionMood=1;score+=100;burst(player.x+20,player.y+24,28);sfx('star');msg('✨ WONDER BURST! SECRET PATHS REVEALED!')}
 function cycleBadge(){badgeIndex=(badgeIndex+1)%BADGES.length;msg('🏅 '+BADGES[badgeIndex].name+' EQUIPPED');setHud('badge',BADGES[badgeIndex].name)}
 function drawCompanion(){if(!player)return;const x=player.x-player.face*34,y=player.y+24+Math.sin(frameNow/145)*5;ctx.save();ctx.translate(x,y);ctx.globalAlpha=.94;ctx.shadowColor='#8ef5ff';ctx.shadowBlur=10;ctx.fillStyle='#75e9db';ctx.beginPath();ctx.ellipse(0,0,13,11,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(-4,-3,3,0,7);ctx.arc(5,-3,3,0,7);ctx.fill();ctx.fillStyle='#143b4c';ctx.beginPath();ctx.arc(-3,-3,1.3,0,7);ctx.arc(6,-3,1.3,0,7);ctx.fill();ctx.strokeStyle='#eaffff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(1,3,4,.15,2.7);ctx.stroke();ctx.fillStyle='#ffe36a';ctx.beginPath();ctx.arc(-12,-11,3,0,7);ctx.fill();ctx.restore()}
