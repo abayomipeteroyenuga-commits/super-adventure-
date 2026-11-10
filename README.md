@@ -81,3 +81,16 @@ v19 fixes: repaired mission start crash caused by missing roundRectSafe helper; 
 
 ## Hosting
 The game is a static HTML5 Canvas experience. Serve `index.html`, `game.js`, `manifest.webmanifest`, `icon.svg` and `sw.js` from the same origin over HTTPS. Local saves remain on the player's device; cross-device cloud sync requires a future account/backend service.
+
+
+## v22 Adventure gameplay expansion
+- Added original Wonder Seeds and timed Wonder Bursts. A Wonder Burst reveals nearby secret chests, adds a visual world effect and temporarily boosts Ethan's jump.
+- Added hidden treasure chests in each kingdom course with coin, star and score rewards.
+- Added an original floating companion character that follows Ethan through the adventure.
+- Added three equipable ability badges:
+  - Feather Glide: hold jump while descending to slow the fall.
+  - Coin Magnet: attract nearby coins.
+  - Power Stomp: stronger enemy bounce and extra score.
+- Added touch controls for Wonder Burst and badge switching, plus keyboard E/B and gamepad shoulder controls.
+- Added badge and Wonder Seed progress to local save data.
+- All new characters, art and gameplay names are original to Ethan's game; no Nintendo characters, logos, music or assets are copied.
