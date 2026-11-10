@@ -68,3 +68,16 @@ v19 fixes: repaired mission start crash caused by missing roundRectSafe helper; 
 - Left/right movement mirrors the entire animation correctly.
 - Running uses opposing arm/leg swing; jumping and falling use separate airborne poses.
 - Kept the animation lightweight in Canvas to preserve performance.
+
+
+## v21 International playability and platform upgrade
+- Added a standards-based installable web app manifest and Super Kingdom app icon.
+- Added a same-origin offline shell cache for the game, script, manifest and icon. Third-party analytics and external sites are not cached.
+- Restored normal browser zoom support and added mobile safe-area viewport support.
+- Added local continue-progress saves at safe checkpoint and kingdom-transition points. Saves are stored only in the player's browser on that device.
+- Added standard gamepad input: D-pad/left stick movement, A jump, X fire, Y shop and Start pause.
+- Added controller connection feedback and a dedicated Continue Adventure action when a local save exists.
+- Added page metadata for a clearer install/share experience.
+
+## Hosting
+The game is a static HTML5 Canvas experience. Serve `index.html`, `game.js`, `manifest.webmanifest`, `icon.svg` and `sw.js` from the same origin over HTTPS. Local saves remain on the player's device; cross-device cloud sync requires a future account/backend service.
