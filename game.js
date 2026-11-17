@@ -24,6 +24,7 @@ let finishCelebration=0, finishNextWorld=false, finishEmote='🥳', gameState='m
 let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
 let kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
+let careerOpenedFromPause=false;
 function careerEvent(type,data={}){try{window.SuperKingdomCareer?.recordEvent(type,data)}catch(err){console.warn('Career journal update unavailable:',err)}}
 function recordKingdomComplete(){if(kingdomStats.recorded)return;kingdomStats.recorded=true;careerEvent('worldComplete',{world:world+1,score,seconds:Math.round(kingdomStats.playTime)});}
 const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=40;
@@ -961,8 +962,8 @@ function start(resume=false){
 }
 document.getElementById('wonderBtn')?.addEventListener('click',activateWonder);document.getElementById('badgeBtn')?.addEventListener('click',cycleBadge);
 document.getElementById('careerBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());document.getElementById('careerMenuBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());
-window.addEventListener('superkingdom:career-open',()=>{if(running&&!paused){paused=true;if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}});
-window.addEventListener('superkingdom:career-close',()=>{if(running&&paused&&!shopOpen){paused=false;resumeLoop()}});
+window.addEventListener('superkingdom:career-open',()=>{if(running){careerOpenedFromPause=paused;if(!paused){paused=true;if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}}});
+window.addEventListener('superkingdom:career-close',()=>{if(running&&!careerOpenedFromPause&&paused&&!shopOpen){paused=false;resumeLoop()}careerOpenedFromPause=false;});
 window.addEventListener('superkingdom:career-reward',e=>{const d=e.detail||{};const earned=Math.max(0,Math.floor(Number(d.coins)||0));coins+=earned;score+=Math.max(0,Math.floor(Number(d.score)||0));msg('🏅 '+String(d.label||'CAREER REWARD')+' · +'+earned+' COINS');updateHud(true);saveRunProgress()});
 window.addEventListener('superkingdom:achievement',e=>{if(e.detail?.name)msg('🏆 ACHIEVEMENT: '+e.detail.name)});
 window.addEventListener('superkingdom:save-imported',()=>{refreshContinueButton();msg('✅ KINGDOM JOURNAL BACKUP RESTORED')});
