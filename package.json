@@ -1,0 +1,13 @@
+{
+  "name": "super-kingdom-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ETHAN Super Kingdom Adventure — 40-world HTML5 Canvas game",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test server.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
