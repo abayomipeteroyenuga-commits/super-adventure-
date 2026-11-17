@@ -223,10 +223,7 @@ function render(){
  '<section><h3>🌍 KINGDOM COMPLETION MAP</h3><div class="sk-world-grid">'+worldRows+'</div></section>'+
  '<footer><span>Progress is stored on this device. Use backup to move it to another device.</span><div><button type="button" id="sk-export">EXPORT BACKUP</button><button type="button" id="sk-import">RESTORE BACKUP</button><input id="sk-import-file" type="file" accept="application/json,.json" hidden></div></footer></div>';
 }
-function open(){
- if(document.getElementById('sk-career-overlay'))return;
- window.dispatchEvent(new CustomEvent('superkingdom:career-open'));
- const root=document.createElement('div');root.id='sk-career-overlay';root.innerHTML=render();document.body.appendChild(root);
+function bindJournal(root){
  root.querySelector('#sk-journal-close').onclick=()=>close();
  root.querySelector('#sk-export').onclick=()=>exportBackup();
  const picker=root.querySelector('#sk-import-file');
@@ -234,10 +231,16 @@ function open(){
  picker.onchange=async()=>{
   const file=picker.files?.[0];if(!file)return;
   if(!confirm('Restore this backup? It replaces the career journal and saved adventure on this device.')){picker.value='';return}
-  try{await importBackup(file);root.querySelector('.sk-journal-shell').innerHTML=render().replace('<div class="sk-journal-shell">','').replace(/<\/div>$/,'');alert('Backup restored successfully.');}
+  try{await importBackup(file);root.innerHTML=render();bindJournal(root);alert('Backup restored successfully.');}
   catch(err){alert(err.message||'Backup restore failed.')}
   picker.value='';
  };
+}
+function open(){
+ if(document.getElementById('sk-career-overlay'))return;
+ window.dispatchEvent(new CustomEvent('superkingdom:career-open'));
+ const root=document.createElement('div');root.id='sk-career-overlay';root.innerHTML=render();document.body.appendChild(root);
+ bindJournal(root);
 }
 function close(){
  const root=document.getElementById('sk-career-overlay');if(root)root.remove();
