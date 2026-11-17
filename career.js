@@ -149,8 +149,9 @@ function recordEvent(type,data={}){
    if(!state.weekly.completed&&!state.weekly.seenWorlds.includes(world)){state.weekly.seenWorlds.push(world);weeklyAdd=1}
   }
  }
- if(!state.daily.completed&&dailyAdd&&challengeFor(DAILY_POOL,state.daily.date).id===type)state.daily.progress+=dailyAdd;
- if(!state.weekly.completed&&weeklyAdd&&challengeFor(WEEKLY_POOL,state.weekly.date).id===type)state.weekly.progress+=weeklyAdd;
+ const challengeType=type==='worldComplete'?'world':type;
+ if(!state.daily.completed&&dailyAdd&&challengeFor(DAILY_POOL,state.daily.date).id===challengeType)state.daily.progress+=dailyAdd;
+ if(!state.weekly.completed&&weeklyAdd&&challengeFor(WEEKLY_POOL,state.weekly.date).id===challengeType)state.weekly.progress+=weeklyAdd;
  maybeCompleteChallenges();
  awardAchievements();
  if(type==='worldComplete')persistNow();else persist();
