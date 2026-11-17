@@ -153,7 +153,7 @@ function recordEvent(type,data={}){
  if(!state.weekly.completed&&weeklyAdd&&challengeFor(WEEKLY_POOL,state.weekly.date).id===type)state.weekly.progress+=weeklyAdd;
  maybeCompleteChallenges();
  awardAchievements();
- persist();
+ if(type==='worldComplete')persistNow();else persist();
 }
 function status(){
  ensureChallenges();
