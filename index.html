@@ -52,16 +52,58 @@
 #missionBubble .closeBubble{position:absolute;right:8px;top:8px;border:0;background:#251b16;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;font-weight:900;cursor:pointer;pointer-events:auto;touch-action:manipulation}
 @keyframes bubbleIn{from{opacity:0;transform:translate(-50%,-8px) scale(.98)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @media(max-width:600px){#missionBubble{width:min(94vw,520px)}#missionBubble .bubbleCard{padding:9px 38px 9px 12px;border-width:2px}#missionBubble .speaker{font-size:9px}#missionBubble .missionTitle{font-size:14px}#missionBubble .missionText{font-size:11px;line-height:1.22}}
+
+#sk-career-overlay{position:fixed;inset:0;z-index:30;overflow:auto;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:#050b18ed;color:#eef5ff;font-family:Arial,sans-serif}
+.sk-journal-shell{width:min(1080px,100%);margin:0 auto;padding:clamp(16px,3vw,28px);border:1px solid #f3d17366;border-radius:22px;background:linear-gradient(145deg,#132746,#091425);box-shadow:0 24px 80px #0009}
+.sk-journal-shell header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;border-bottom:1px solid #ffffff20;padding-bottom:14px;margin-bottom:16px}
+.sk-journal-shell header small,.sk-challenge>small{font-size:10px;font-weight:900;letter-spacing:1.8px;color:#f7d36d}
+.sk-journal-shell header h2{font-size:clamp(24px,4vw,34px);margin:5px 0;color:#fff}
+.sk-journal-shell header p{margin:0;color:#b9cee6;font-size:13px}
+.sk-journal-shell button{font:900 12px Arial;border:1px solid #f5d36a77;border-radius:10px;padding:10px 13px;color:#fff;background:#263f62;cursor:pointer;touch-action:manipulation}
+#sk-journal-close{font-size:26px;padding:2px 11px;line-height:1.3}
+.sk-stat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:14px 0 20px}
+.sk-stat-grid>div{padding:12px;border-radius:12px;border:1px solid #ffffff18;background:#ffffff09;display:grid;gap:5px}
+.sk-stat-grid b{font-size:clamp(19px,3vw,27px);color:#ffd96a}
+.sk-stat-grid span{font-size:10px;font-weight:800;color:#bdd0e8}
+.sk-challenge-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 22px}
+.sk-challenge{padding:15px;border-radius:15px;background:#172f4d;border:1px solid #7edbff40}
+.sk-challenge.weekly{border-color:#f4d46d55;background:#302846}
+.sk-challenge h3{margin:7px 0;font-size:18px;color:#fff}
+.sk-challenge p{margin:0 0 12px;color:#bed2e8;font-size:13px}
+.sk-challenge>b{display:block;margin-top:8px;font-size:12px}
+.sk-challenge>small:last-child{display:block;margin-top:8px;color:#9fb7d3;letter-spacing:0}
+.sk-progress{height:9px;background:#0007;border-radius:20px;overflow:hidden}
+.sk-progress i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#68d9ff,#f7d56a)}
+.sk-journal-shell section>h3{font-size:15px;color:#f7d36d;letter-spacing:1px;margin:20px 0 10px}
+.sk-achievements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sk-achievement{display:grid;gap:5px;padding:11px;border:1px solid #ffffff17;border-radius:11px;background:#ffffff08;opacity:.55}
+.sk-achievement.unlocked{opacity:1;border-color:#f4d46d55;background:#f4d46d0e}
+.sk-achievement b{font-size:12px;color:#f8e4a4}
+.sk-achievement span{font-size:11px;color:#b9cce2;line-height:1.4}
+.sk-world-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-height:330px;overflow:auto;padding:2px}
+.sk-world-row{display:grid;grid-template-columns:25px 1fr;gap:3px 6px;padding:8px;border:1px solid #ffffff12;border-radius:8px;background:#ffffff06}
+.sk-world-row.complete{border-color:#6fd9a855;background:#42c68b10}
+.sk-world-row>b{grid-row:span 2;color:#f4d46d;font-size:12px}
+.sk-world-row>span{font-size:9px;font-weight:900;color:#dbe8f7}
+.sk-world-row>small{font-size:9px;color:#8fa8c2}
+.sk-journal-shell footer{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:18px;padding-top:14px;border-top:1px solid #ffffff20}
+.sk-journal-shell footer>span{font-size:11px;color:#9cb2cc;line-height:1.4}
+.sk-journal-shell footer>div{display:flex;gap:8px;flex-wrap:wrap}
+#careerMenuBtn{border:1px solid #ffffff55;border-radius:16px;padding:14px 18px;font-size:14px;font-weight:1000;cursor:pointer;color:#fff;background:linear-gradient(180deg,#345b83,#1b3555);box-shadow:0 7px 0 #0a1728;touch-action:manipulation}
+@media(max-width:760px){.sk-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sk-world-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sk-journal-shell footer{align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){#sk-career-overlay{padding:8px}.sk-journal-shell{padding:12px;border-radius:15px}.sk-challenge-grid{grid-template-columns:1fr}.sk-achievements{grid-template-columns:1fr}.sk-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sk-journal-shell footer>div{width:100%}.sk-journal-shell footer button{flex:1}}
+
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="hud"><button id="audioBtn" class="hudbtn" aria-label="Toggle music">🔊</button><button id="musicBtn" class="hudbtn" aria-label="Change background music">🎵 CHANGE MUSIC</button><span>⏱ <b id="timer">3:00</b></span><span>❤️ <b id="lives">3</b></span><span>🪙 <b id="coins">0</b></span><span>⭐ <b id="stars">0</b></span><span>💰 <b id="score">0</b></span><span>WORLD <b id="world">1/40</b></span><span>POWER <b id="power">SMALL</b></span><span>🏅 <b id="badge">FEATHER GLIDE</b></span><span>🛡 <b id="shield">0</b>s</span><button id="pauseBtn" class="hudbtn">⏸</button></div>
+<div id="hud"><button id="audioBtn" class="hudbtn" aria-label="Toggle music">🔊</button><button id="musicBtn" class="hudbtn" aria-label="Change background music">🎵 CHANGE MUSIC</button><button id="careerBtn" class="hudbtn" aria-label="Open career journal">🏆 JOURNAL</button><span>⏱ <b id="timer">3:00</b></span><span>❤️ <b id="lives">3</b></span><span>🪙 <b id="coins">0</b></span><span>⭐ <b id="stars">0</b></span><span>💰 <b id="score">0</b></span><span>WORLD <b id="world">1/40</b></span><span>POWER <b id="power">SMALL</b></span><span>🏅 <b id="badge">FEATHER GLIDE</b></span><span>🛡 <b id="shield">0</b>s</span><button id="pauseBtn" class="hudbtn">⏸</button></div>
 <div id="message"></div>
 <div id="missionBubble" aria-live="polite"><div class="bubbleCard"><button id="closeMissionBubble" class="closeBubble" aria-label="Close mission">×</button><div class="speaker">ETHAN • KINGDOM MISSION</div><div id="missionBubbleTitle" class="missionTitle"></div><div id="missionBubbleText" class="missionText"></div></div></div>
 
-<div id="start"><div class="panel"><section class="startHero"><div class="startBrand">ETHAN DIGITAL ACADEMY PRESENTS</div><div class="startEyebrow">⚔️ FANTASY PLATFORM ADVENTURE</div><h1>SUPER KINGDOM<br><span class="gold">ADVENTURE</span></h1><p class="startStory">Forty kingdoms await Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.</p><div class="startQuest"><span>🌍 40 UNIQUE KINGDOMS</span><span>👑 ARMORED GUARDIANS</span><span>⭐ SHIELD & POWER-UPS</span><span>🏆 RESCUE FEDORA</span></div><div class="startActions"><button id="play">⚔ BEGIN MISSION</button><button id="continue" type="button" hidden>▶ CONTINUE ADVENTURE</button></div></section><aside class="startSide"><div class="missionCard"><div class="startCrest">⚔️</div><div class="startMission">MISSION • RESCUE FEDORA</div><h2>THE KINGDOM QUEST</h2><p>Ethan must journey from the Meadow Kingdom to the Ultimate Kingdom and defeat every guardian blocking the path.</p><div class="missionSteps"><div class="missionStep"><b>1</b><span>Explore each kingdom and collect useful power-ups.</span></div><div class="missionStep"><b>2</b><span>Dodge enemies and guardian energy attacks.</span></div><div class="missionStep"><b>3</b><span>Defeat the boss, reach home, and unlock the next world.</span></div></div><div class="startHint">KEYBOARD • TOUCH • GAMEPAD CONTROLS</div></div></aside></div></div>
+<div id="start"><div class="panel"><section class="startHero"><div class="startBrand">ETHAN DIGITAL ACADEMY PRESENTS</div><div class="startEyebrow">⚔️ FANTASY PLATFORM ADVENTURE</div><h1>SUPER KINGDOM<br><span class="gold">ADVENTURE</span></h1><p class="startStory">Forty kingdoms await Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.</p><div class="startQuest"><span>🌍 40 UNIQUE KINGDOMS</span><span>👑 ARMORED GUARDIANS</span><span>⭐ SHIELD & POWER-UPS</span><span>🏆 RESCUE FEDORA</span></div><div class="startActions"><button id="play">⚔ BEGIN MISSION</button><button id="continue" type="button" hidden>▶ CONTINUE ADVENTURE</button><button id="careerMenuBtn" type="button">🏅 KINGDOM JOURNAL</button></div></section><aside class="startSide"><div class="missionCard"><div class="startCrest">⚔️</div><div class="startMission">MISSION • RESCUE FEDORA</div><h2>THE KINGDOM QUEST</h2><p>Ethan must journey from the Meadow Kingdom to the Ultimate Kingdom and defeat every guardian blocking the path.</p><div class="missionSteps"><div class="missionStep"><b>1</b><span>Explore each kingdom and collect useful power-ups.</span></div><div class="missionStep"><b>2</b><span>Dodge enemies and guardian energy attacks.</span></div><div class="missionStep"><b>3</b><span>Defeat the boss, reach home, and unlock the next world.</span></div></div><div class="startHint">KEYBOARD • TOUCH • GAMEPAD CONTROLS</div></div></aside></div></div>
 <div id="touch"><div class="pad"><button class="btn" data-k="left">◀</button><button class="btn" data-k="right">▶</button></div><div class="pad"><button class="btn" data-k="jump">⬆</button><button class="btn" data-k="crouch">⬇</button><button class="btn" data-k="dash">⚡</button><button class="btn" data-k="fire">🔥</button><button class="btn" data-k="wonder">✨</button><button class="btn" data-k="badge">🏅</button><button class="btn" data-k="shop">🛒</button></div></div>
+<script src="career.js"></script>
 <script src="game.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(err=>console.warn("Offline support unavailable:",err)));}</script>
 
