@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Super Kingdom Adventure",
   "short_name": "Super Kingdom",
-  "description": "Explore 20 kingdoms, defeat guardians and rescue Fedora.",
+  "description": "Explore 40 kingdoms, defeat guardians, collect treasures and rescue Fedora.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
