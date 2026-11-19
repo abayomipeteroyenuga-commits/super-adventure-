@@ -1,0 +1,25 @@
+name: Validate Super Kingdom Adventure
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check game.js
+          node --check career.js
+          node --check server.js
+      - name: Test Railway static server
+        run: npm test
+      - name: Validate web manifest
+        run: node -e "JSON.parse(require('node:fs').readFileSync('manifest.webmanifest','utf8')); console.log('Manifest JSON valid')"

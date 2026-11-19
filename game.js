@@ -23,6 +23,10 @@ let running=false,last=0,cam=0,score=0,coins=0,stars=0,lives=3,world=0,level=1,t
 let finishCelebration=0, finishNextWorld=false, finishEmote='🥳', gameState='menu', transitionLocked=false, pauseBeforeHide=false;
 let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
+let kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
+let careerOpenedFromPause=false;
+function careerEvent(type,data={}){try{window.SuperKingdomCareer?.recordEvent(type,data)}catch(err){console.warn('Career journal update unavailable:',err)}}
+function recordKingdomComplete(){if(kingdomStats.recorded)return;kingdomStats.recorded=true;careerEvent('worldComplete',{world:world+1,score,seconds:Math.round(kingdomStats.playTime)});}
 const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=40;
 // Relaxed exploration worlds: no guardian battle, just collect treasure and reach the exit.
 const FREE_ROAM_WORLDS=new Set([20,21,23,25,28,29,31,35,36,38]);
@@ -245,7 +249,7 @@ function resize(){
 addEventListener('resize',()=>{if(resizeRaf)cancelAnimationFrame(resizeRaf);resizeRaf=requestAnimationFrame(()=>{resizeRaf=0;resize()})},{passive:true});resize();
 function resetWorld(){
  world=Math.max(0,Math.min(WORLD_COUNT-1,Number.isFinite(world)?Math.floor(world):0));
- platforms=[];enemies=[];items=[];projectiles=[];bossShots=[];particles=[];cam=0;checkpointX=70;checkpointY=350;timeLeft=180;
+ platforms=[];enemies=[];items=[];projectiles=[];bossShots=[];particles=[];cam=0;checkpointX=70;checkpointY=350;timeLeft=180;kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
  const base=610, span=8500;
  for(let i=0;i<Math.ceil(span/260);i++) platforms.push({x:i*260,y:base,w:260,h:110});
  const elevated=[[420,500,150],[720,430,170],[1080,500,170],[1420,410,160],[1760,480,190],[2160,420,180],[2530,500,160],[2910,390,180],[3280,470,190],[3660,410,170],[4040,500,180],[4440,430,190],[4860,360,170],[5280,470,180],[5690,410,170],[6100,500,190],[6520,390,180],[6940,450,170],[7360,360,190],[7780,470,190]];
@@ -285,7 +289,7 @@ function damage(){
  if(player.power!=='small'){
   player.power='small';player.fire=0;player.inv=1.2;msg('Power lost!');return;
  }
- lives--;player.inv=1.4;player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;bossShots=[];
+ lives--;careerEvent('death');player.inv=1.4;player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;bossShots=[];
  if(lives<=0){
   lives=0;running=false;gameState='gameover';
   if(rafId){cancelAnimationFrame(rafId);rafId=0}
@@ -296,6 +300,7 @@ function damage(){
 function update(dt){
  if(shopOpen||paused)return;
  validateProgress();
+ kingdomStats.playTime+=dt;
  const frameScale=Math.min(2,Math.max(.25,dt*60));
  if(finishCelebration>0||transitionLocked){
    particles.forEach(p=>{p.x+=p.vx*frameScale;p.y+=p.vy*frameScale;p.vy+=.15*frameScale;p.t-=dt});
@@ -304,6 +309,7 @@ function update(dt){
    if(finishCelebration<=0&&finishNextWorld){
      const transitionId=++worldTransitionId;
      finishNextWorld=false;
+     recordKingdomComplete();
      if(world<WORLD_COUNT-1){
        transitionLocked=true;
        world=Math.min(WORLD_COUNT-1,world+1); level=1; resetWorld(); transitionLocked=false; saveRunProgress();
@@ -328,8 +334,8 @@ function update(dt){
   // Do not simulate enemies far outside the active camera area.
   if(e.x < cam-900 || e.x > cam+viewW+900) continue;
   e.x+=e.vx*frameScale;if(e.x<30||e.x>8350){e.x=Math.max(30,Math.min(8350,e.x));e.vx*=-1}if(e.type==='hopper'&&Math.random()<(1-Math.pow(1-.008,frameScale)))e.vy=-7;if(e.vy){e.y+=e.vy*frameScale;e.vy+=.3*frameScale;if(e.y>558){e.y=558;e.vy=0}}if(rect(player,e)){if(player.shield>0||player.inv>0){e.alive=false;score+=200;player.vy=player.vy>0?-6:player.vy;burst(e.x,e.y,16);sfx('stomp')}else if(player.vy>2&&player.y+player.h-e.y<22){e.alive=false;score+=BADGES[badgeIndex].id==='stomp'?300:150;player.vy=BADGES[badgeIndex].id==='stomp'?-11:-8;burst(e.x,e.y,10);sfx('stomp')}else damage()}}
- for(const it of items){if(it.got)continue;if(it.type==='coin'&&BADGES[badgeIndex].id==='magnet'&&Math.abs(it.x-player.x)<180&&Math.abs(it.y-player.y)<130){it.x+=(player.x-it.x)*Math.min(.12,dt*.9);it.y+=(player.y+22-it.y)*Math.min(.12,dt*.9)}if(rect(player,{x:it.x-12,y:it.y-12,w:24,h:24})){it.got=true;if(it.type==='coin'){coins++;score+=10;sfx('coin')}else if(it.type==='wonder'){wonderSeeds++;score+=500;activateWonder();msg('🌟 WONDER SEED! '+wonderSeeds+' FOUND')}else if(it.type==='star'){stars++;score+=250;player.shield=8;player.inv=8;burst(it.x,it.y,22);sfx('star');msg('⭐ STAR SHIELD! 8 SECONDS OF PROTECTION!')}else if(it.type==='fire'){player.power='fire';player.fire=16;burst(it.x,it.y,14);sfx('fire');msg('🔥 FIRE POWER!')}else{lives=Math.min(9,lives+1);msg('EXTRA LIFE!')}}}
- for(const chest of secretCaches){if(!chest.got&&Math.abs(player.x-chest.x)<32&&Math.abs(player.y-chest.y)<70){chest.got=true;coins+=35;stars++;score+=750;player.shield=Math.max(player.shield,4);burst(chest.x,chest.y,30);sfx('star');msg('💎 SECRET KINGDOM CHEST! +35 COINS +1 STAR')}}
+ for(const it of items){if(it.got)continue;if(it.type==='coin'&&BADGES[badgeIndex].id==='magnet'&&Math.abs(it.x-player.x)<180&&Math.abs(it.y-player.y)<130){it.x+=(player.x-it.x)*Math.min(.12,dt*.9);it.y+=(player.y+22-it.y)*Math.min(.12,dt*.9)}if(rect(player,{x:it.x-12,y:it.y-12,w:24,h:24})){it.got=true;if(it.type==='coin'){coins++;score+=10;kingdomStats.coins++;careerEvent('coin',{amount:1});sfx('coin')}else if(it.type==='wonder'){wonderSeeds++;kingdomStats.wonderSeeds++;careerEvent('wonder');score+=500;activateWonder();msg('🌟 WONDER SEED! '+wonderSeeds+' FOUND')}else if(it.type==='star'){stars++;kingdomStats.stars++;careerEvent('star');score+=250;player.shield=8;player.inv=8;burst(it.x,it.y,22);sfx('star');msg('⭐ STAR SHIELD! 8 SECONDS OF PROTECTION!')}else if(it.type==='fire'){player.power='fire';player.fire=16;burst(it.x,it.y,14);sfx('fire');msg('🔥 FIRE POWER!')}else{lives=Math.min(9,lives+1);msg('EXTRA LIFE!')}}}
+ for(const chest of secretCaches){if(!chest.got&&Math.abs(player.x-chest.x)<32&&Math.abs(player.y-chest.y)<70){chest.got=true;kingdomStats.chests++;kingdomStats.coins+=35;kingdomStats.stars++;careerEvent('chest');careerEvent('coin',{amount:35});careerEvent('star');coins+=35;stars++;score+=750;player.shield=Math.max(player.shield,4);burst(chest.x,chest.y,30);sfx('star');msg('💎 SECRET KINGDOM CHEST! +35 COINS +1 STAR')}}
  wonderTime=Math.max(0,wonderTime-dt);wonderPulse=Math.max(0,wonderPulse-dt);secretReveal=Math.max(0,secretReveal-dt);
  for(const p of projectiles){p.x+=p.vx*frameScale;p.y+=p.vy*frameScale;p.vy+=.15*frameScale;p.t-=dt;for(const e of enemies)if(e.alive&&p.t>0&&Math.abs(p.x-e.x)<28&&Math.abs(p.y-e.y)<42){e.alive=false;score+=200;p.t=0;burst(e.x,e.y,14);sfx('fire');break}}projectiles=projectiles.filter(p=>p.t>0&&p.x>cam-100&&p.x<cam+1500);
  if(boss.alive){
@@ -364,7 +370,7 @@ function update(dt){
     burst(sx,sy,8); sfx('fire');
   }
 if(rect(player,{x:boss.x,y:boss.y,w:boss.w,h:boss.h})&&boss.hitCooldown<=0){if(player.shield>0||player.inv>0){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.45;boss.hitFlash=.25;player.vy=-10;burst(boss.x+55,boss.y+40,24);sfx('hit');msg(boss.emote+' BOSS HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}else if(player.vy>2&&player.y+player.h-boss.y<30){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.55;boss.hitFlash=.25;player.vy=-11;score+=300;burst(boss.x+55,boss.y,22);sfx('stomp');msg('💥 '+boss.name+' HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}else{damage();boss.hitCooldown=.55;}}for(const p of projectiles){if(p.t>0&&boss.hitCooldown<=0&&Math.abs(p.x-(boss.x+55))<65&&Math.abs(p.y-(boss.y+45))<65){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.18;boss.hitFlash=.25;p.t=0;score+=250;burst(boss.x+55,boss.y+45,20);sfx('fire');msg('🔥 BOSS HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}}if(boss.hp<=0){
-  boss.alive=false;boss.defeated=true;
+  boss.alive=false;boss.defeated=true;kingdomStats.guardianDefeated=true;careerEvent('guardian');kingdomStats.coins+=50;careerEvent('coin',{amount:50});
   const bossCoins=50;
   coins+=bossCoins;score+=1500+bossCoins*10;
   for(let i=0;i<10;i++)laterSfx(()=>sfx('coin'),i*35);
@@ -922,8 +928,8 @@ function loop(t){
 }
 function resumeLoop(){if(running&&!paused&&!shopOpen&&!rafId){last=performance.now();rafId=requestAnimationFrame(loop)}}
 function validateProgress(){world=Math.max(0,Math.min(WORLD_COUNT-1,Math.floor(Number(world)||0)));if(!Number.isFinite(score))score=0;if(!Number.isFinite(coins)||coins<0)coins=0;if(!Number.isFinite(stars)||stars<0)stars=0;if(!Number.isFinite(lives)||lives<0)lives=0;}
-function readSavedRun(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||s.version!==1||!Number.isInteger(s.world)||s.world<0||s.world>=WORLD_COUNT)return null;return s}catch(_){return null}}
-function saveRunProgress(){try{if(!player)return;localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,world,score,coins,stars,lives,timeLeft,checkpointX,checkpointY,x:Math.max(checkpointX,Math.min(player.x,checkpointX+150)),y:Math.min(player.y,checkpointY),power:player.power,fire:player.fire,sprint:player.sprint,shield:player.shield,badgeIndex,wonderSeeds}));refreshContinueButton()}catch(err){console.warn('Progress could not be saved:',err)}}
+function readSavedRun(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||![1,2].includes(s.version)||!Number.isInteger(s.world)||s.world<0||s.world>=WORLD_COUNT)return null;const st=s.kingdomStats&&typeof s.kingdomStats==='object'?s.kingdomStats:{};return {...s,kingdomStats:{coins:Math.max(0,Number(st.coins)||0),stars:Math.max(0,Number(st.stars)||0),chests:Math.max(0,Number(st.chests)||0),wonderSeeds:Math.max(0,Number(st.wonderSeeds)||0),guardianDefeated:!!st.guardianDefeated,playTime:Math.max(0,Number(st.playTime)||0),recorded:!!st.recorded}}}catch(_){return null}}
+function saveRunProgress(){try{if(!player)return;localStorage.setItem(SAVE_KEY,JSON.stringify({version:2,world,score,coins,stars,lives,timeLeft,checkpointX,checkpointY,x:Math.max(checkpointX,Math.min(player.x,checkpointX+150)),y:Math.min(player.y,checkpointY),power:player.power,fire:player.fire,sprint:player.sprint,shield:player.shield,badgeIndex,wonderSeeds,kingdomStats}));refreshContinueButton()}catch(err){console.warn('Progress could not be saved:',err)}}
 function clearSavedRun(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}refreshContinueButton()}
 function refreshContinueButton(){const b=document.getElementById('continue');if(b)b.hidden=!readSavedRun()}
 function start(resume=false){
@@ -937,7 +943,7 @@ function start(resume=false){
  rescueSequence=0;rescueDone=false;shopOpen=false;paused=false;gameState='playing';
  try{
    resetWorld();
-   if(saved){checkpointX=Math.max(70,Math.min(6900,Number(saved.checkpointX)||70));checkpointY=Number(saved.checkpointY)||350;player.x=Math.max(checkpointX,Math.min(checkpointX+150,Number(saved.x)||checkpointX));player.y=Math.max(120,Math.min(520,Number(saved.y)||checkpointY));player.power=saved.power==='fire'?'fire':'small';player.fire=Math.max(0,Math.min(16,Number(saved.fire)||0));player.sprint=Math.max(0,Math.min(18,Number(saved.sprint)||0));player.shield=Math.max(0,Math.min(12,Number(saved.shield)||0));badgeIndex=Math.max(0,Math.min(BADGES.length-1,Number(saved.badgeIndex)||0));wonderSeeds=Math.max(0,Number(saved.wonderSeeds)||0);}
+   if(saved){kingdomStats={...kingdomStats,...(saved.kingdomStats||{})};checkpointX=Math.max(70,Math.min(6900,Number(saved.checkpointX)||70));checkpointY=Number(saved.checkpointY)||350;player.x=Math.max(checkpointX,Math.min(checkpointX+150,Number(saved.x)||checkpointX));player.y=Math.max(120,Math.min(520,Number(saved.y)||checkpointY));player.power=saved.power==='fire'?'fire':'small';player.fire=Math.max(0,Math.min(16,Number(saved.fire)||0));player.sprint=Math.max(0,Math.min(18,Number(saved.sprint)||0));player.shield=Math.max(0,Math.min(12,Number(saved.shield)||0));badgeIndex=Math.max(0,Math.min(BADGES.length-1,Number(saved.badgeIndex)||0));wonderSeeds=Math.max(0,Number(saved.wonderSeeds)||0);}
    validateProgress();
    running=true;
    last=performance.now();
@@ -955,6 +961,12 @@ function start(resume=false){
  }
 }
 document.getElementById('wonderBtn')?.addEventListener('click',activateWonder);document.getElementById('badgeBtn')?.addEventListener('click',cycleBadge);
+document.getElementById('careerBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());document.getElementById('careerMenuBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());
+window.addEventListener('superkingdom:career-open',()=>{if(running){careerOpenedFromPause=paused;if(!paused){paused=true;if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}}});
+window.addEventListener('superkingdom:career-close',()=>{if(running&&!careerOpenedFromPause&&paused&&!shopOpen){paused=false;resumeLoop()}careerOpenedFromPause=false;});
+window.addEventListener('superkingdom:career-reward',e=>{const d=e.detail||{};const earned=Math.max(0,Math.floor(Number(d.coins)||0));coins+=earned;score+=Math.max(0,Math.floor(Number(d.score)||0));msg('🏅 '+String(d.label||'CAREER REWARD')+' · +'+earned+' COINS');updateHud(true);saveRunProgress()});
+window.addEventListener('superkingdom:achievement',e=>{if(e.detail?.name)msg('🏆 ACHIEVEMENT: '+e.detail.name)});
+window.addEventListener('superkingdom:save-imported',()=>{refreshContinueButton();msg('✅ KINGDOM JOURNAL BACKUP RESTORED')});
 document.getElementById('closeMissionBubble').onclick=hideWorldMissionBubble;
 document.getElementById('play').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};document.getElementById('continue').onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};refreshContinueButton(); document.getElementById('audioBtn').onclick=()=>{initAudio();musicOn=!musicOn;document.getElementById('audioBtn').textContent=musicOn?'🔊':'🔇';if(musicOn)playMusic();else {stopAllMusic()}};document.getElementById('musicBtn').onclick=()=>{initAudio();cycleMusicTrack()};document.getElementById('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw();}else resumeLoop();};
 addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','Shift','w','W','a','A','d','D','f','F','t','T','g','G','s','S','x','X','c','C','z','Z','ArrowDown','p','P','Escape'].includes(e.key))e.preventDefault();const wasDown=!!keys[e.key];keys[e.key]=true;if(e.repeat||wasDown)return;if(['ArrowUp','w','W',' '].includes(e.key))jump();if(['f','F','t','T','g','G'].includes(e.key))fire();if(['s','S'].includes(e.key))openShop();if(['e','E'].includes(e.key))activateWonder();if(['b','B'].includes(e.key))cycleBadge();if(e.key==='Escape'){shopOpen=false;if(paused){paused=false;msg('RESUMED')}resumeLoop()}if(['p','P'].includes(e.key)&&running&&!shopOpen){paused=!paused;msg(paused?'PAUSED':'RESUMED');if(paused){if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}else resumeLoop()}if(!running&&e.key==='Enter')start()});

@@ -94,3 +94,14 @@ The game is a static HTML5 Canvas experience. Serve `index.html`, `game.js`, `ma
 - Added touch controls for Wonder Burst and badge switching, plus keyboard E/B and gamepad shoulder controls.
 - Added badge and Wonder Seed progress to local save data.
 - All new characters, art and gameplay names are original to Ethan's game; no Nintendo characters, logos, music or assets are copied.
+
+
+## v23 Kingdom Journal and career progression
+- Added the Kingdom Journal with career-wide totals, per-kingdom best score/time, completion status and ten achievements.
+- Added rotating daily and weekly kingdom trials covering coins, hidden chests, guardians and kingdom completions.
+- Challenge rewards are paid into the in-game coin and score balances; progress and streaks are saved locally.
+- Added JSON export/restore of both the career journal and current checkpoint save, with file validation and confirmation before restore.
+- Upgraded checkpoint saves to version 2 while continuing to read existing version 1 saves.
+- Added the Journal to the start screen and in-game HUD, with keyboard/touch-independent button access.
+- Expanded the offline service-worker cache to include the journal module.
+
