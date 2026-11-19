@@ -105,3 +105,17 @@ The game is a static HTML5 Canvas experience. Serve `index.html`, `game.js`, `ma
 - Added the Journal to the start screen and in-game HUD, with keyboard/touch-independent button access.
 - Expanded the offline service-worker cache to include the journal module.
 
+
+
+## v24 Royal Challenge Hall and replay modes
+- Added replay mode for each kingdom already completed in Story Mode, without clearing or overwriting the player's existing Story Mode checkpoint.
+- Added Time Attack (one life and a timed clear), Extreme (shorter timer, faster enemies and guardians, and a higher guardian coin reward), and Assist Play (more lives, more time, and slower enemies/guardians).
+- Added local personal bests for each mode, medal ranks (bronze, silver, gold and platinum), medal totals, and new medal/trial achievements.
+- Added daily and weekly Time Attack and Extreme challenge variants.
+- Added three new selectable badges: Royal Double Jump, Treasure Radar and Swift Stride. The original Feather Glide, Coin Magnet and Power Stomp remain available.
+- Updated the PWA service-worker cache so installed copies refresh the changed game and career scripts.
+- Personal bests and medals are stored on the player's device. Global online leaderboards and account-based cloud sync are not part of this release.
+
+## v24 validation
+- Added career progression tests for medal thresholds, independent mode records, assist-mode unranked completion, and migration of existing Story Mode records.
+- npm test runs both static-server tests and career progression tests.
