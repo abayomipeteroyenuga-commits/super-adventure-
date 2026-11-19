@@ -280,10 +280,21 @@ function fire(){if(!running||paused||player.fire<=0)return;if(projectiles.length
 function burst(px,py,n){const cap=lowDetail?120:220;const count=Math.min(n,lowDetail?Math.ceil(n*.35):n);for(let i=0;i<count;i++)particles.push({x:px,y:py,vx:(Math.random()-.5)*5,vy:-Math.random()*5,t:.55});if(particles.length>cap)particles.splice(0,particles.length-cap)}
 function buy(type){const cost=shop[type];if(coins<cost)return msg('Need '+cost+' coins');coins-=cost;if(type==='fire')player.power='fire',player.fire=Math.max(player.fire,12);if(type==='sprint')player.sprint=Math.max(player.sprint,18);if(type==='heart')lives=Math.min(9,lives+1);if(type==='star'){stars++;score+=250;player.shield=Math.max(player.shield,8);player.inv=Math.max(player.inv,8);burst(player.x+20,player.y+25,22);sfx('star');}if(type==='shield')player.shield=12;shopOpen=false;msg(type.toUpperCase()+' purchased!');resumeLoop()}
 function openShop(){if(!player||!running)return;shopOpen=!shopOpen;if(shopOpen&&rafId){cancelAnimationFrame(rafId);rafId=0;draw()}else if(!shopOpen)resumeLoop();}
+function showAdventureMenu(){
+ running=false;paused=false;shopOpen=false;gameState='menu';stopAllMusic();hideWorldMissionBubble();
+ document.querySelector('#start h1').innerHTML='SUPER KINGDOM<br><span class="gold">ADVENTURE</span>';
+ document.querySelector('#start p').textContent='Forty kingdoms await Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.';
+ const playButton=document.getElementById('play');playButton.textContent='⚔ BEGIN MISSION';
+ playButton.onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};
+ const continueButton=document.getElementById('continue');
+ continueButton.onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};
+ refreshContinueButton();document.getElementById('start').style.display='grid';
+}
 function showStart(title,text,button){
  document.querySelector('#start h1').textContent=title;
  document.querySelector('#start p').textContent=text;
- document.getElementById('play').textContent=button;
+ const playButton=document.getElementById('play');playButton.textContent=button;
+ if(gameMode!=='story')playButton.onclick=showAdventureMenu;
  document.getElementById('start').style.display='grid';
 }
 function damage(){
