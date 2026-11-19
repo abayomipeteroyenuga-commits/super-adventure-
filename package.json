@@ -5,7 +5,7 @@
   "description": "ETHAN Super Kingdom Adventure — 40-world HTML5 Canvas game",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test server.test.js"
+    "test": "node --test server.test.js career.test.js"
   },
   "engines": {
     "node": ">=20"

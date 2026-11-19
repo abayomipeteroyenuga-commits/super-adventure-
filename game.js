@@ -25,8 +25,9 @@ let rescueSequence=0, rescueDone=false;
 let player,platforms=[],enemies=[],items=[],projectiles=[],bossShots=[],particles=[],goal,boss,shopOpen=false,paused=false,checkpointX=70,checkpointY=350,rafId=0,camY=0;
 let kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
 let careerOpenedFromPause=false;
+let gameMode='story';
 function careerEvent(type,data={}){try{window.SuperKingdomCareer?.recordEvent(type,data)}catch(err){console.warn('Career journal update unavailable:',err)}}
-function recordKingdomComplete(){if(kingdomStats.recorded)return;kingdomStats.recorded=true;careerEvent('worldComplete',{world:world+1,score,seconds:Math.round(kingdomStats.playTime)});}
+function recordKingdomComplete(){if(kingdomStats.recorded)return;kingdomStats.recorded=true;careerEvent('worldComplete',{world:world+1,score,seconds:Math.round(kingdomStats.playTime),mode:gameMode});}
 const keys={}, gamepadKeys={left:false,right:false,crouch:false,sprint:false}, WORLD_COUNT=40;
 // Relaxed exploration worlds: no guardian battle, just collect treasure and reach the exit.
 const FREE_ROAM_WORLDS=new Set([20,21,23,25,28,29,31,35,36,38]);
@@ -34,7 +35,7 @@ const SWIM_WORLDS=new Set([21,25,28]);
 const isFreeRoam=()=>FREE_ROAM_WORLDS.has(world);
 const isSwimming=()=>SWIM_WORLDS.has(world);
 const SAVE_KEY='ethan.superkingdom.save.v1';
-const BADGES=[{id:'feather',name:'FEATHER GLIDE',desc:'Hold jump while falling to glide'},{id:'magnet',name:'COIN MAGNET',desc:'Attract nearby coins automatically'},{id:'stomp',name:'POWER STOMP',desc:'Stronger enemy bounces and bonus points'}];
+const BADGES=[{id:'feather',name:'FEATHER GLIDE',desc:'Hold jump while falling to glide'},{id:'magnet',name:'COIN MAGNET',desc:'Attract nearby coins automatically'},{id:'stomp',name:'POWER STOMP',desc:'Stronger enemy bounces and bonus points'},{id:'royal',name:'ROYAL DOUBLE JUMP',desc:'Jump once more while airborne'},{id:'radar',name:'TREASURE RADAR',desc:'Reveal hidden chests from farther away'},{id:'swift',name:'SWIFT STRIDE',desc:'Move faster across the kingdom'}];
 let badgeIndex=0,wonderTime=0,wonderPulse=0,secretReveal=0,wonderSeeds=0,companionMood=0;
 let secretCaches=[];
 let audioCtx=null, musicGain=null, sfxGain=null, musicTimer=null, victoryTimer=null, musicOn=true, victoryActive=false, activeVoices=0, musicTrackIndex=-1;
@@ -249,7 +250,7 @@ function resize(){
 addEventListener('resize',()=>{if(resizeRaf)cancelAnimationFrame(resizeRaf);resizeRaf=requestAnimationFrame(()=>{resizeRaf=0;resize()})},{passive:true});resize();
 function resetWorld(){
  world=Math.max(0,Math.min(WORLD_COUNT-1,Number.isFinite(world)?Math.floor(world):0));
- platforms=[];enemies=[];items=[];projectiles=[];bossShots=[];particles=[];cam=0;checkpointX=70;checkpointY=350;timeLeft=180;kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
+ platforms=[];enemies=[];items=[];projectiles=[];bossShots=[];particles=[];cam=0;checkpointX=70;checkpointY=350;timeLeft=gameMode==='extreme'?120:gameMode==='assist'?240:180;kingdomStats={coins:0,stars:0,chests:0,wonderSeeds:0,guardianDefeated:false,playTime:0,recorded:false};
  const base=610, span=8500;
  for(let i=0;i<Math.ceil(span/260);i++) platforms.push({x:i*260,y:base,w:260,h:110});
  const elevated=[[420,500,150],[720,430,170],[1080,500,170],[1420,410,160],[1760,480,190],[2160,420,180],[2530,500,160],[2910,390,180],[3280,470,190],[3660,410,170],[4040,500,180],[4440,430,190],[4860,360,170],[5280,470,180],[5690,410,170],[6100,500,190],[6520,390,180],[6940,450,170],[7360,360,190],[7780,470,190]];
@@ -261,27 +262,39 @@ function resetWorld(){
  ['mountain-goat','runner','goat'],['monkey','hopper','leopard'],['arctic-fox','walker','wolf'],['hawk','flyer','fox'],
  ['cave-spider','walker','bat'],['frog','hopper','monkey'],['boar','runner','leopard'],['deer','walker','fox']
 ]; const kinds=enemyKinds[world%enemyKinds.length]; if(!isFreeRoam())for(let i=0;i<34;i++){let x=520+i*245+(i%3)*35;enemies.push({x,y:558,w:38,h:44,vx:i%2?-.8:.8,vy:0,alive:true,type:kinds[i%kinds.length]})}
+ if(gameMode==='extreme')enemies.forEach(e=>e.vx*=1.35);else if(gameMode==='assist')enemies.forEach(e=>e.vx*=.78);
  for(let i=0;i<(isFreeRoam()?115:70);i++){let x=140+i*(isFreeRoam()?72:118);items.push({x,y:isSwimming()?250+(i%7)*42:530-(i%6)*34,type:i%23===0?'wonder':i%12===0?'star':i%9===0?'fire':i%7===0?'heart':'coin',got:false,bob:Math.random()*6})}
  secretCaches=[{x:1180,y:470,got:false},{x:2780,y:355,got:false},{x:4620,y:395,got:false},{x:6760,y:415,got:false}];
  const bossKinds=['bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','crocodile','rhino','wolf','boar','tiger','bear','cobra','gorilla','tiger','shark','octopus','robot','unicorn','panda','whale','jaguar','scorpion','kraken','ice-golem','owl','stag','storm-beast','shadow-drake','phoenix','mech-king','fairy-queen','stone-giant','dream-beast','grand-guardian'];
  const bossNames=['MEADOW SENTINEL','DUNE WARDEN','FOREST COLOSSUS','CRYSTAL GUARDIAN','FROST COMMANDER','SKY SENTINEL','MAGMA WARLORD','ROYAL WARDEN','RUIN KNIGHT','MARSH GUARDIAN','DRAGON COMMANDER','TIDAL CAPTAIN','THUNDER WARDEN','LOST SENTINEL','SHADOW KNIGHT','GOLDEN CHAMPION','FORTRESS WARLORD','ARCANE GUARDIAN','DARK COMMANDER','ULTIMATE KING','AURORA LEVIATHAN','CORAL EMPRESS','CLOCKWORK OVERLORD','SUGARSTORM WIZARD','BAMBOO ANCIENT','SAPPHIRE TITAN','EMERALD PREDATOR','ASTRAL SAND KING','DEEPWATER KRAKEN','GLACIER COLOSSUS','MOONWATCH KNIGHT','THORNBACK CHAMPION','STORMBREAKER','OBSIDIAN CORE','PHOENIX WARDEN','NEON MACHINE KING','CELESTIAL DREAMWEAVER','MOUNTAIN KING','ENCHANTED ANCIENT','GRAND KINGDOM GUARDIAN'];
  const bossEmotes=['😡','🐍','💪','😤','💥','🐺','🔥','👑','🐻','🐍','🦍','🐊','🦏','🐺','🐗','🐯','👹','⚡','💪','👑','🦈','🐙','🤖','🦄','🐼','🐳','🐆','🦂','🐉','🧊','🦉','🦌','⚡','🐲','🔥','🤖','🧚','🗿','✨','👑']; boss={x:7900,y:500,w:110,h:100,vx:0,vy:0,alive:!isFreeRoam(),hp:6,maxHp:6,type:bossKinds[world],name:bossNames[world],emote:bossEmotes[world],hitFlash:0,hitCooldown:0,attackCooldown:1.15,attackFlash:0,defeated:false,face:-1}; goal={x:8080,y:465};
- player={x:70,y:isSwimming()?300:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false};
+ player={x:70,y:isSwimming()?300:500,w:40,h:58,vx:0,vy:0,on:false,face:1,power:'small',fire:0,sprint:0,shield:0,inv:0,crouch:false,extraJumpUsed:false};
 }
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function jump(){if(!running||paused)return;if(isSwimming()){player.vy=-5.2;burst(player.x+20,player.y+player.h,5);sfx('jump');return}if(player.on){player.vy=wonderTime>0?-16:-13;player.on=false;burst(player.x+20,player.y+58,wonderTime>0?14:6);sfx('jump')}}
+function jump(){if(!running||paused)return;if(isSwimming()){player.vy=-5.2;burst(player.x+20,player.y+player.h,5);sfx('jump');return}if(player.on){player.vy=wonderTime>0?-16:-13;player.on=false;player.extraJumpUsed=false;burst(player.x+20,player.y+58,wonderTime>0?14:6);sfx('jump');return}if(BADGES[badgeIndex].id==='royal'&&!player.extraJumpUsed){player.vy=-12.2;player.extraJumpUsed=true;burst(player.x+20,player.y+player.h,10);sfx('jump');msg('👑 ROYAL DOUBLE JUMP!')}}
 function activateWonder(){if(!running||paused||wonderTime>0)return;wonderTime=9;wonderPulse=1;secretReveal=7;companionMood=1;score+=100;burst(player.x+20,player.y+24,28);sfx('star');msg('✨ WONDER BURST! SECRET PATHS REVEALED!')}
 function cycleBadge(){badgeIndex=(badgeIndex+1)%BADGES.length;msg('🏅 '+BADGES[badgeIndex].name+' EQUIPPED');setHud('badge',BADGES[badgeIndex].name)}
 function drawCompanion(){if(!player)return;const x=player.x-player.face*34,y=player.y+24+Math.sin(frameNow/145)*5;ctx.save();ctx.translate(x,y);ctx.globalAlpha=.94;ctx.shadowColor='#8ef5ff';ctx.shadowBlur=10;ctx.fillStyle='#75e9db';ctx.beginPath();ctx.ellipse(0,0,13,11,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(-4,-3,3,0,7);ctx.arc(5,-3,3,0,7);ctx.fill();ctx.fillStyle='#143b4c';ctx.beginPath();ctx.arc(-3,-3,1.3,0,7);ctx.arc(6,-3,1.3,0,7);ctx.fill();ctx.strokeStyle='#eaffff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(1,3,4,.15,2.7);ctx.stroke();ctx.fillStyle='#ffe36a';ctx.beginPath();ctx.arc(-12,-11,3,0,7);ctx.fill();ctx.restore()}
-function drawSecretCaches(){for(const chest of secretCaches){if(chest.got)continue;const visible=secretReveal>0||Math.abs(player.x-chest.x)<90;if(!visible)continue;ctx.save();ctx.translate(chest.x,chest.y);ctx.shadowColor='#ffd86a';ctx.shadowBlur=secretReveal>0?18:6;ctx.fillStyle='#8b4c22';ctx.fillRect(-17,-13,34,25);ctx.fillStyle='#e8ad45';ctx.fillRect(-17,-13,34,8);ctx.fillStyle='#ffe36a';ctx.fillRect(-3,-6,6,13);ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.strokeRect(-17,-13,34,25);ctx.restore()}}
+function drawSecretCaches(){for(const chest of secretCaches){if(chest.got)continue;const visible=secretReveal>0||Math.abs(player.x-chest.x)<90||(BADGES[badgeIndex].id==='radar'&&Math.abs(player.x-chest.x)<230);if(!visible)continue;ctx.save();ctx.translate(chest.x,chest.y);ctx.shadowColor='#ffd86a';ctx.shadowBlur=secretReveal>0?18:6;ctx.fillStyle='#8b4c22';ctx.fillRect(-17,-13,34,25);ctx.fillStyle='#e8ad45';ctx.fillRect(-17,-13,34,8);ctx.fillStyle='#ffe36a';ctx.fillRect(-3,-6,6,13);ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.strokeRect(-17,-13,34,25);ctx.restore()}}
 function fire(){if(!running||paused||player.fire<=0)return;if(projectiles.length<12){projectiles.push({x:player.x+player.face*25,y:player.y+27,vx:player.face*10,vy:-1.5,t:2});player.fire--;burst(player.x+player.face*24,player.y+27,4);sfx('fire')}}
 function burst(px,py,n){const cap=lowDetail?120:220;const count=Math.min(n,lowDetail?Math.ceil(n*.35):n);for(let i=0;i<count;i++)particles.push({x:px,y:py,vx:(Math.random()-.5)*5,vy:-Math.random()*5,t:.55});if(particles.length>cap)particles.splice(0,particles.length-cap)}
 function buy(type){const cost=shop[type];if(coins<cost)return msg('Need '+cost+' coins');coins-=cost;if(type==='fire')player.power='fire',player.fire=Math.max(player.fire,12);if(type==='sprint')player.sprint=Math.max(player.sprint,18);if(type==='heart')lives=Math.min(9,lives+1);if(type==='star'){stars++;score+=250;player.shield=Math.max(player.shield,8);player.inv=Math.max(player.inv,8);burst(player.x+20,player.y+25,22);sfx('star');}if(type==='shield')player.shield=12;shopOpen=false;msg(type.toUpperCase()+' purchased!');resumeLoop()}
 function openShop(){if(!player||!running)return;shopOpen=!shopOpen;if(shopOpen&&rafId){cancelAnimationFrame(rafId);rafId=0;draw()}else if(!shopOpen)resumeLoop();}
+function showAdventureMenu(){
+ running=false;paused=false;shopOpen=false;gameState='menu';stopAllMusic();hideWorldMissionBubble();
+ document.querySelector('#start h1').innerHTML='SUPER KINGDOM<br><span class="gold">ADVENTURE</span>';
+ document.querySelector('#start p').textContent='Forty kingdoms await Ethan and Fedora. Cross enchanted lands, collect powers, survive guardian attacks, and break through the Ultimate Kingdom.';
+ const playButton=document.getElementById('play');playButton.textContent='⚔ BEGIN MISSION';
+ playButton.onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(false)};
+ const continueButton=document.getElementById('continue');
+ continueButton.onclick=()=>{try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}start(true)};
+ refreshContinueButton();document.getElementById('start').style.display='grid';
+}
 function showStart(title,text,button){
  document.querySelector('#start h1').textContent=title;
  document.querySelector('#start p').textContent=text;
- document.getElementById('play').textContent=button;
+ const playButton=document.getElementById('play');playButton.textContent=button;
+ if(gameMode!=='story')playButton.onclick=showAdventureMenu;
  document.getElementById('start').style.display='grid';
 }
 function damage(){
@@ -310,6 +323,13 @@ function update(dt){
      const transitionId=++worldTransitionId;
      finishNextWorld=false;
      recordKingdomComplete();
+     if(gameMode!=='story'){
+       running=false;gameState='trialcomplete';stopAllMusic();hideWorldMissionBubble();
+       const result=window.SuperKingdomCareer?.status()?.worldRecords?.[world+1];
+       const rank=result?.modes?.[gameMode]?.bestMedal||'none';
+       showStart('TRIAL COMPLETE!',themes[world].name+' cleared in '+Math.round(kingdomStats.playTime)+'s · '+(rank==='none'?'UNRANKED':rank.toUpperCase()+' MEDAL')+'.','RETURN TO ADVENTURE');
+       return;
+     }
      if(world<WORLD_COUNT-1){
        transitionLocked=true;
        world=Math.min(WORLD_COUNT-1,world+1); level=1; resetWorld(); transitionLocked=false; saveRunProgress();
@@ -323,13 +343,13 @@ function update(dt){
  }
  let left=keys.ArrowLeft||keys.a||keys.A||gamepadKeys.left,right=keys.ArrowRight||keys.d||keys.D||gamepadKeys.right; const crouching=keys.ArrowDown||keys.c||keys.C||keys.z||keys.Z||gamepadKeys.crouch; player.crouch=!!crouching;
  const sprinting=keys.shift||keys.x||keys.X||gamepadKeys.sprint;
- const max=crouching?2.5:(sprinting?9:(player.sprint>0?8:6));
+ const max=(crouching?2.5:(sprinting?9:(player.sprint>0?8:6)))*(BADGES[badgeIndex].id==='swift'?1.3:1);
  if(left)player.vx-=1.15*frameScale;if(right)player.vx+=1.15*frameScale;if(!left&&!right){player.vx*=Math.pow(.62,frameScale);if(Math.abs(player.vx)<.08)player.vx=0;}
  if(left&&right)player.vx*=Math.pow(.55,frameScale);
  player.vx=Math.max(-max,Math.min(max,player.vx));if(Math.abs(player.vx)>.2)player.face=Math.sign(player.vx);
  if(crouching&&player.on) player.vx*=Math.pow(.82,frameScale);
  const prevY=player.y; if(isSwimming()){const swimUp=keys.ArrowUp||keys.w||keys.W||keys[' ']||gamepadKeys.sprint;const swimDown=keys.ArrowDown||keys.c||keys.C||gamepadKeys.crouch;player.vy+=(swimUp ? -.72 : (swimDown ? .58 : -.025))*frameScale;player.vy*=Math.pow(.91,frameScale);player.vy=Math.max(-5.2,Math.min(5.2,player.vy));if(swimUp&&Math.random()<.10)burst(player.x+20,player.y+player.h,2);}else player.vy+=(BADGES[badgeIndex].id==='feather'&&player.vy>0&&(keys.ArrowUp||keys.w||keys.W||keys[' '])?.28:.65)*frameScale;player.x+=player.vx*frameScale;player.y+=player.vy*frameScale;player.on=false; player.x=Math.max(0,Math.min(8380,player.x));if(isSwimming())player.y=Math.max(105,Math.min(540,player.y));
- for(const p of platforms)if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y+player.h>=p.y&&prevY+player.h<=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.on=true}
+ for(const p of platforms)if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y+player.h>=p.y&&prevY+player.h<=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.on=true;player.extraJumpUsed=false}
  for(const e of enemies)if(e.alive){
   // Do not simulate enemies far outside the active camera area.
   if(e.x < cam-900 || e.x > cam+viewW+900) continue;
@@ -351,7 +371,7 @@ function update(dt){
   // Boss stays alert and stationary until Ethan enters its detection range.
   // Once spotted, it walks directly toward Ethan, then stops at attack range.
   if(bossSpotted && Math.abs(bossDx)>145){
-    boss.vx=Math.sign(bossDx)*2.15;
+    boss.vx=Math.sign(bossDx)*2.15*(gameMode==='extreme'?1.35:gameMode==='assist'?.78:1);
     boss.x+=boss.vx*frameScale;
     boss.x=Math.max(7200,Math.min(8200,boss.x));
   }else{
@@ -362,16 +382,16 @@ function update(dt){
     const sx=boss.x+boss.w/2+boss.face*48, sy=boss.y+18;
     const tx=player.x+player.w/2, ty=player.y+player.h/2;
     const dx=tx-sx, dy=ty-sy, len=Math.max(1,Math.hypot(dx,dy));
-    const speed=4.4+Math.min(1.8,world*.08);
+    const speed=(4.4+Math.min(1.8,world*.08))*(gameMode==='extreme'?1.22:gameMode==='assist'?.82:1);
     bossShots.push({x:sx,y:sy,vx:dx/len*speed,vy:dy/len*speed,t:3.1,r:11,world});
     boss.face=Math.sign(dx)||boss.face;
     boss.attackFlash=.28;
-    boss.attackCooldown=Math.max(1.25,2.25-world*.035);
+    boss.attackCooldown=Math.max(1.25,2.25-world*.035)*(gameMode==='extreme'?.78:gameMode==='assist'?1.25:1);
     burst(sx,sy,8); sfx('fire');
   }
 if(rect(player,{x:boss.x,y:boss.y,w:boss.w,h:boss.h})&&boss.hitCooldown<=0){if(player.shield>0||player.inv>0){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.45;boss.hitFlash=.25;player.vy=-10;burst(boss.x+55,boss.y+40,24);sfx('hit');msg(boss.emote+' BOSS HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}else if(player.vy>2&&player.y+player.h-boss.y<30){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.55;boss.hitFlash=.25;player.vy=-11;score+=300;burst(boss.x+55,boss.y,22);sfx('stomp');msg('💥 '+boss.name+' HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}else{damage();boss.hitCooldown=.55;}}for(const p of projectiles){if(p.t>0&&boss.hitCooldown<=0&&Math.abs(p.x-(boss.x+55))<65&&Math.abs(p.y-(boss.y+45))<65){boss.hp=Math.max(0,boss.hp-.5);boss.hitCooldown=.18;boss.hitFlash=.25;p.t=0;score+=250;burst(boss.x+55,boss.y+45,20);sfx('fire');msg('🔥 BOSS HIT! '+Math.max(0,boss.hp).toFixed(1)+' HP LEFT');}}if(boss.hp<=0){
-  boss.alive=false;boss.defeated=true;kingdomStats.guardianDefeated=true;careerEvent('guardian');kingdomStats.coins+=50;careerEvent('coin',{amount:50});
-  const bossCoins=50;
+  boss.alive=false;boss.defeated=true;kingdomStats.guardianDefeated=true;careerEvent('guardian');
+  const bossCoins=gameMode==='extreme'?100:50;kingdomStats.coins+=bossCoins;careerEvent('coin',{amount:bossCoins});
   coins+=bossCoins;score+=1500+bossCoins*10;
   for(let i=0;i<10;i++)laterSfx(()=>sfx('coin'),i*35);
   burst(boss.x+55,boss.y+45,70);sfx('goal');playVictoryMusic();
@@ -413,7 +433,9 @@ if(rect(player,{x:boss.x,y:boss.y,w:boss.w,h:boss.h})&&boss.hitCooldown<=0){if(p
   }
   return;
  }
- timeLeft-=dt; if(timeLeft<=0){timeLeft=0;if(player.inv<=0&&player.shield<=0){damage();if(running){timeLeft=180;msg('TIME UP! TRY AGAIN!')}}} if(player.y>800){damage();if(running){player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;timeLeft=180}}
+ timeLeft-=dt;
+  if(timeLeft<=0){timeLeft=0;if(gameMode==='time-attack'||gameMode==='extreme'){running=false;gameState='trialfailed';stopAllMusic();hideWorldMissionBubble();showStart('TIME EXPIRED','The trial clock reached zero. Replay this kingdom and beat your best time.','RETURN TO ADVENTURE');return;}if(player.inv<=0&&player.shield<=0){damage();if(running){timeLeft=gameMode==='assist'?240:180;msg('TIME UP! TRY AGAIN!')}}}
+  if(player.y>800){damage();if(running){player.x=checkpointX;player.y=checkpointY;player.vy=0;player.vx=0;timeLeft=gameMode==='assist'?240:180}}
  if(player.x>checkpointX+1100){checkpointX=Math.min(6900,Math.floor(player.x/1200)*1200+70);checkpointY=350;saveRunProgress();msg('CHECKPOINT!')}
  if(!finishCelebration&&(!boss.alive||isFreeRoam())&&rect(player,{x:goal.x,y:goal.y,w:180,h:170})){
    transitionLocked=true; finishCelebration=2.8; finishNextWorld=true; player.vx=0; player.vy=0;
@@ -929,21 +951,23 @@ function loop(t){
 function resumeLoop(){if(running&&!paused&&!shopOpen&&!rafId){last=performance.now();rafId=requestAnimationFrame(loop)}}
 function validateProgress(){world=Math.max(0,Math.min(WORLD_COUNT-1,Math.floor(Number(world)||0)));if(!Number.isFinite(score))score=0;if(!Number.isFinite(coins)||coins<0)coins=0;if(!Number.isFinite(stars)||stars<0)stars=0;if(!Number.isFinite(lives)||lives<0)lives=0;}
 function readSavedRun(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||![1,2].includes(s.version)||!Number.isInteger(s.world)||s.world<0||s.world>=WORLD_COUNT)return null;const st=s.kingdomStats&&typeof s.kingdomStats==='object'?s.kingdomStats:{};return {...s,kingdomStats:{coins:Math.max(0,Number(st.coins)||0),stars:Math.max(0,Number(st.stars)||0),chests:Math.max(0,Number(st.chests)||0),wonderSeeds:Math.max(0,Number(st.wonderSeeds)||0),guardianDefeated:!!st.guardianDefeated,playTime:Math.max(0,Number(st.playTime)||0),recorded:!!st.recorded}}}catch(_){return null}}
-function saveRunProgress(){try{if(!player)return;localStorage.setItem(SAVE_KEY,JSON.stringify({version:2,world,score,coins,stars,lives,timeLeft,checkpointX,checkpointY,x:Math.max(checkpointX,Math.min(player.x,checkpointX+150)),y:Math.min(player.y,checkpointY),power:player.power,fire:player.fire,sprint:player.sprint,shield:player.shield,badgeIndex,wonderSeeds,kingdomStats}));refreshContinueButton()}catch(err){console.warn('Progress could not be saved:',err)}}
+function saveRunProgress(){try{if(!player||gameMode!=='story')return;localStorage.setItem(SAVE_KEY,JSON.stringify({version:2,world,score,coins,stars,lives,timeLeft,checkpointX,checkpointY,x:Math.max(checkpointX,Math.min(player.x,checkpointX+150)),y:Math.min(player.y,checkpointY),power:player.power,fire:player.fire,sprint:player.sprint,shield:player.shield,badgeIndex,wonderSeeds,kingdomStats}));refreshContinueButton()}catch(err){console.warn('Progress could not be saved:',err)}}
 function clearSavedRun(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}refreshContinueButton()}
 function refreshContinueButton(){const b=document.getElementById('continue');if(b)b.hidden=!readSavedRun()}
-function start(resume=false){
+function start(resume=false,requestedWorld=null,requestedMode='story'){
+ gameMode=['story','replay','time-attack','extreme','assist'].includes(requestedMode)?requestedMode:'story';
  hideWorldMissionBubble();
  if(rafId){cancelAnimationFrame(rafId);rafId=0}
  stopAllMusic();
  for(const k in keys)keys[k]=false;
- const saved=resume?readSavedRun():null;if(!resume)clearSavedRun();
- lives=saved?Math.max(1,Math.min(9,Number(saved.lives)||3)):3;coins=saved?Math.max(0,Number(saved.coins)||0):0;stars=saved?Math.max(0,Number(saved.stars)||0):0;score=saved?Math.max(0,Number(saved.score)||0):0;world=saved?Math.max(0,Math.min(WORLD_COUNT-1,Number(saved.world)||0)):0;level=1;timeLeft=saved?Math.max(15,Math.min(180,Number(saved.timeLeft)||180)):180;
+ const saved=resume?readSavedRun():null;if(!resume&&gameMode==='story')clearSavedRun();
+ const initialWorld=requestedWorld===null?0:Number(requestedWorld);
+ lives=saved?Math.max(1,Math.min(9,Number(saved.lives)||3)):(gameMode==='assist'?5:(gameMode==='time-attack'||gameMode==='extreme'?1:3));coins=saved?Math.max(0,Number(saved.coins)||0):0;stars=saved?Math.max(0,Number(saved.stars)||0):0;score=saved?Math.max(0,Number(saved.score)||0):0;world=saved?Math.max(0,Math.min(WORLD_COUNT-1,Number(saved.world)||0)):Math.max(0,Math.min(WORLD_COUNT-1,Number.isFinite(initialWorld)?Math.floor(initialWorld):0));level=1;timeLeft=saved?Math.max(15,Math.min(180,Number(saved.timeLeft)||180)):(gameMode==='extreme'?120:gameMode==='assist'?240:180);
  finishCelebration=0;finishNextWorld=false;finishEmote='🥳';transitionLocked=false;
  rescueSequence=0;rescueDone=false;shopOpen=false;paused=false;gameState='playing';
  try{
    resetWorld();
-   if(saved){kingdomStats={...kingdomStats,...(saved.kingdomStats||{})};checkpointX=Math.max(70,Math.min(6900,Number(saved.checkpointX)||70));checkpointY=Number(saved.checkpointY)||350;player.x=Math.max(checkpointX,Math.min(checkpointX+150,Number(saved.x)||checkpointX));player.y=Math.max(120,Math.min(520,Number(saved.y)||checkpointY));player.power=saved.power==='fire'?'fire':'small';player.fire=Math.max(0,Math.min(16,Number(saved.fire)||0));player.sprint=Math.max(0,Math.min(18,Number(saved.sprint)||0));player.shield=Math.max(0,Math.min(12,Number(saved.shield)||0));badgeIndex=Math.max(0,Math.min(BADGES.length-1,Number(saved.badgeIndex)||0));wonderSeeds=Math.max(0,Number(saved.wonderSeeds)||0);}
+   if(saved){kingdomStats={...kingdomStats,...(saved.kingdomStats||{})};checkpointX=Math.max(70,Math.min(6900,Number(saved.checkpointX)||70));checkpointY=Number(saved.checkpointY)||350;player.x=Math.max(checkpointX,Math.min(checkpointX+150,Number(saved.x)||checkpointX));player.y=Math.max(120,Math.min(520,Number(saved.y)||checkpointY));player.power=saved.power==='fire'?'fire':'small';player.fire=Math.max(0,Math.min(16,Number(saved.fire)||0));player.sprint=Math.max(0,Math.min(18,Number(saved.sprint)||0));player.shield=Math.max(0,Math.min(12,Number(saved.shield)||0));badgeIndex=Math.max(0,Math.min(BADGES.length-1,Number(saved.badgeIndex)||0));wonderSeeds=Math.max(0,Number(saved.wonderSeeds)||0);timeLeft=Math.max(15,Math.min(180,Number(saved.timeLeft)||180));}
    validateProgress();
    running=true;
    last=performance.now();
@@ -960,6 +984,17 @@ function start(resume=false){
    showStart('MISSION START ERROR','The game safely stopped before play began. Reload and try again.','RETRY MISSION');
  }
 }
+function startKingdom(worldNumber,mode='replay'){
+ const n=Math.floor(Number(worldNumber));
+ if(!Number.isInteger(n)||n<1||n>WORLD_COUNT)return msg('That kingdom is not available.');
+ const progress=window.SuperKingdomCareer?.status();
+ if(!progress?.completedWorlds?.includes(n))return msg('Complete this kingdom in Story Mode to unlock its trials.');
+ const allowed=['replay','time-attack','extreme','assist'];
+ const selected=allowed.includes(mode)?mode:'replay';
+ try{initAudio()}catch(err){console.warn('Audio unavailable:',err)}
+ start(false,n-1,selected);
+}
+window.SuperKingdomGame={startKingdom};
 document.getElementById('wonderBtn')?.addEventListener('click',activateWonder);document.getElementById('badgeBtn')?.addEventListener('click',cycleBadge);
 document.getElementById('careerBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());document.getElementById('careerMenuBtn')?.addEventListener('click',()=>window.SuperKingdomCareer?.open());
 window.addEventListener('superkingdom:career-open',()=>{if(running){careerOpenedFromPause=paused;if(!paused){paused=true;if(rafId){cancelAnimationFrame(rafId);rafId=0}draw()}}});
