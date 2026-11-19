@@ -20,6 +20,14 @@ const WEEKLY_POOL=[
   {id:'trial',title:'TIMEKEEPER',text:'Clear 3 kingdoms in Time Attack',target:3,reward:400},
   {id:'extreme',title:'EXTREME ROYALTY',text:'Clear 2 Extreme Trials',target:2,reward:500}
 ];
+const BADGE_GUIDE=[
+ {name:'FEATHER GLIDE',desc:'Hold jump while falling to slow your descent.'},
+ {name:'COIN MAGNET',desc:'Attract nearby coins automatically.'},
+ {name:'POWER STOMP',desc:'Bounce harder on enemies and earn extra score.'},
+ {name:'ROYAL DOUBLE JUMP',desc:'Jump once more while already in the air.'},
+ {name:'TREASURE RADAR',desc:'Reveal hidden chests from farther away.'},
+ {name:'SWIFT STRIDE',desc:'Move faster through the kingdom.'}
+];
 const ACHIEVEMENTS=[
  {id:'first_kingdom',name:'FIRST STEPS',desc:'Complete your first kingdom.'},
  {id:'guardian_hunter',name:'GUARDIAN HUNTER',desc:'Defeat 5 guardians.'},
@@ -265,11 +273,13 @@ function render(){
   const unlocked=!!s.achievements[a.id];
   return '<div class="sk-achievement '+(unlocked?'unlocked':'')+'"><b>'+(unlocked?'🏆':'🔒')+' '+esc(a.name)+'</b><span>'+esc(a.desc)+'</span></div>';
  }).join('');
+ const badgeCards=BADGE_GUIDE.map(a=>'<div class="sk-achievement unlocked"><b>🧩 '+esc(a.name)+'</b><span>'+esc(a.desc)+'</span></div>').join('');
  return '<div class="sk-journal-shell"><header><div><small>ETHAN • SUPER KINGDOM ADVENTURE</small><h2>👑 ROYAL CHALLENGE HALL</h2><p>Replay cleared kingdoms, chase medals or enter a tougher trial.</p></div><button type="button" id="sk-journal-close" aria-label="Close journal">×</button></header>'+
  '<section class="sk-stat-grid"><div><b>'+done+'/40</b><span>Kingdoms cleared</span></div><div><b>'+s.stats.guardians+'</b><span>Guardians defeated</span></div><div><b>'+s.stats.chests+'</b><span>Hidden chests</span></div><div><b>'+s.stats.coins.toLocaleString()+'</b><span>Coins collected</span></div><div><b>'+s.stats.wonderSeeds+'</b><span>Wonder Seeds</span></div><div><b>'+s.stats.defeats+'</b><span>Defeats survived</span></div><div><b>'+s.stats.timeTrials+'</b><span>Time Attack clears</span></div><div><b>'+s.stats.extremeClears+'</b><span>Extreme clears</span></div><div><b>'+Object.values(s.medalTotals).reduce((a,b)=>a+b,0)+'</b><span>Kingdom medals</span></div></section>'+
  '<section class="sk-medal-cabinet"><h3>🏆 MEDAL CABINET</h3><div><span>🥉 '+s.medalTotals.bronze+' Bronze</span><span>🥈 '+s.medalTotals.silver+' Silver</span><span>🥇 '+s.medalTotals.gold+' Gold</span><span>💎 '+s.medalTotals.platinum+' Platinum</span></div></section>'+
  '<section class="sk-challenge-grid"><article class="sk-challenge"><small>DAILY KINGDOM TRIAL</small><h3>'+esc(d.challenge.title)+'</h3><p>'+esc(d.challenge.text)+'</p><div class="sk-progress"><i style="width:'+dPct+'%"></i></div><b>'+Math.min(d.progress,d.challenge.target)+' / '+d.challenge.target+(d.completed?' · COMPLETE':'')+'</b><small>Reward: '+d.challenge.reward+' coins · Streak: '+d.streak+' days</small></article>'+
  '<article class="sk-challenge weekly"><small>WEEKLY KINGDOM TRIAL</small><h3>'+esc(w.challenge.title)+'</h3><p>'+esc(w.challenge.text)+'</p><div class="sk-progress"><i style="width:'+wPct+'%"></i></div><b>'+Math.min(w.progress,w.challenge.target)+' / '+w.challenge.target+(w.completed?' · COMPLETE':'')+'</b><small>Reward: '+w.challenge.reward+' coins · Streak: '+w.streak+' weeks</small></article></section>'+
+ '<section><h3>🧩 SIX ABILITY BADGES</h3><div class="sk-achievements">'+badgeCards+'</div></section>'+
  '<section><h3>🏅 ACHIEVEMENTS · '+Object.keys(s.achievements).length+'/'+s.achievementDefinitions.length+'</h3><div class="sk-achievements">'+ach+'</div></section>'+
  '<section><h3>🌍 KINGDOM REPLAY & TRIAL SELECT</h3><p class="sk-section-note">Clear a kingdom in Story Mode once to unlock replay, Time Attack, Extreme and Assist modes. Records and medals are saved on this device.</p><div class="sk-world-grid">'+worldRows+'</div></section>'+
  '<footer><span>Personal bests are local to this device. Online rankings and cross-device sync are not connected yet. Backup moves your progress between devices.</span><div><button type="button" id="sk-export">EXPORT BACKUP</button><button type="button" id="sk-import">RESTORE BACKUP</button><input id="sk-import-file" type="file" accept="application/json,.json" hidden></div></footer></div>';
